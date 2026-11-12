@@ -1,83 +1,69 @@
 # FreshMart Grocery Delivery System
 
-Hamdhan Mohamed Ameen · Kingston EUK00361749 · ESOFT E179021  
-CI6115 Programming III · Coursework 2
+Hamdhan Mohamed Ameen | Kingston University ID EUK00361749 | ESOFT E179021
+CI6115 Programming III – Patterns and Algorithms, Coursework 2
 
-A Java 21 CLI application with customer and administrator login, local persistence, inventory, delivery orders, cancellation and itemised invoices. No third-party Java libraries or database server are required.
+A Java 17+ command-line application for product and stock administration, customer accounts,
+delivery orders, cancellations and detailed invoices. No external libraries, database or build
+tool are needed.
 
-## Run in VS Code
+## Run
 
-1. Install a **full JDK 21** and Microsoft's Extension Pack for Java in VS Code. A JRE alone cannot compile the project.
-2. Extract the ZIP, open the **FreshMart** folder in VS Code and open Terminal → New Terminal.
-3. Check `java -version` reports 21. Run one of the commands below from the project folder.
+1. Install a JDK 17 or newer and the VS Code *Extension Pack for Java*.
+2. Open the `FreshMart` folder in VS Code.
+3. Windows PowerShell: `./run.ps1` &nbsp;|&nbsp; macOS/Linux: `bash run.sh`
+   (or open `EUK00361749_Main.java` and click **Run** above `main`).
 
-Windows PowerShell:
+On the first run you create the administrator account (name, email, password of at least
+8 characters). Then: log in as administrator → add products → log out → register a customer →
+log in → place an order (basket, date, slot, preview, confirm) → note the order ID (e.g. `ORD0001`).
+Log in as administrator again to advance the order's status; the customer sees a notification at
+their next login.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\run.ps1
-```
+## Tests
 
-macOS or Linux:
+Windows: `./test.ps1` &nbsp;|&nbsp; macOS/Linux: `bash test.sh`
 
-```bash
-bash run.sh
-```
+The regression suite runs 71 automated test cases (normal, boundary and invalid inputs) against
+a fixed clock (10 Nov 2026) using temporary data files, and saves the results table to
+`docs/evidence/test-results.txt`.
 
-The scripts compile with the JDK's compiler module and launch the CLI. You can also use the included VS Code Run FreshMart launch configuration. Use the integrated terminal so password entry is hidden; redirected consoles display a warning that input will be visible.
+## Design summary
 
-## First run and use
+| Concept | Where |
+|---|---|
+| Inheritance / abstraction | `Account` (abstract) → `Admin`, `Customer` |
+| Polymorphism | `getRole()` / `getMenuTitle()` overridden; `PricingPolicy` and `OrderObserver` interfaces |
+| Encapsulation | private fields, immutable records, store returns unmodifiable copies |
+| Strategy pattern | `PricingPolicy` ← `CategoryPricing` |
+| Observer pattern | `Service` (subject) notifies `OrderObserver`s; `CustomerNotifier` keeps each customer's inbox |
+| Builder pattern | `Order.OrderBuilder` assembles lines, date and slot before validation |
+| Data structures | `LinkedHashMap` (O(1) lookup by ID), `HashSet` (duplicate line check), `HashMap` of message lists, `ArrayList` |
+| Algorithms | generic merge sort (`Sorter`), linear product search, 5-step billing, sequential ID generation |
 
-Create your own administrator name, email and password (15–128 characters). No administrator password or real customer data is included. Log in, add products and stock, then log out. Register a customer with NIC, name, phone, address, email and password. Log in as that customer to browse/search, order, edit your profile, change your password, view history or cancel an eligible order.
+Class diagram source: `docs/class-diagram.puml` (render with the VS Code PlantUML extension or
+plantuml.com).
 
-For a quick demonstration add V1 Carrots, category Vegetables, price 1000, stock 20; add H1 Detergent, Household Essentials, price 6000, stock 20. Order V1 quantity 6 and H1 quantity 1 for tomorrow. The quote should be **LKR 12,425.00**. Cancel before dispatch and both stock quantities return to 20.
+## Assumptions
 
-Administrator menu option 8 moves an order through PLACED → PREPARING → OUT_FOR_DELIVERY → DELIVERED. The customer can cancel in either of the first two states. Cancelled and delivered orders are terminal. Invoice option can export a text file to `invoices/`.
+- An order must reach the highest minimum order value among the categories in the basket.
+- One delivery fee is charged per order: the highest fee among its categories.
+- The category discount applies only when the product total **exceeds** LKR 10,000, and is
+  calculated per line at that line's category rate. Tax is charged per line on the discounted
+  value; the delivery fee is not taxed.
+- Stock status is calculated from quantity (0 Out of Stock, 1–5 Low Stock, 6+ In Stock), but the
+  administrator can also set it directly. "In Stock" or "Low Stock" with zero quantity is rejected.
+- Only In Stock products can be ordered (Low Stock items are held back).
+- Stock is reserved when an order is placed and returned if it is cancelled.
+- Customers can cancel while an order is Placed or Preparing (not once Out for Delivery).
+- Delivery must be tomorrow or later (Asia/Colombo date).
+- The NIC is the permanent customer ID; email is unique and used to log in.
+- Products that appear in any order cannot be deleted (set stock to 0 instead).
+- Payment is cash on delivery; no card processing.
+- Notifications are kept for the current program session only.
 
-## Agreed business assumptions
+## Data
 
-- All prices are LKR. Unit prices are entered per product; category determines minimum, delivery, discount and tax.
-- Mixed-category baskets are supported. The highest category minimum applies to the combined pre-discount product total. Charge the highest delivery fee once.
-- Discount eligibility requires product total **strictly greater than 10000**. Apply the category discount to each qualifying line, then tax its discounted amount at its category rate. Delivery is untaxed.
-- Round each line's discount and tax to two decimals using HALF_UP, then sum. Delivery is a single fixed fee.
-- Quantity 0 = OUT_OF_STOCK, 1–5 = LOW_STOCK, 6+ = IN_STOCK. Only IN_STOCK products can be ordered, including when the requested quantity is small. Status is derived from quantity to prevent contradictory values.
-- Reserve stock on order placement. Restore exactly once when an eligible cancellation succeeds. Retain products referenced by history; set stock to zero instead of deleting them.
-- No same-day or past delivery. Dates use Asia/Colombo. Slots are 09:00–12:00, 12:00–16:00, 16:00–20:00. No delivery-capacity model.
-- Customer NIC is the stable identity and cannot be edited. Email is unique, case insensitive, and used to log in. Profiles and passwords can be changed.
-- Orders snapshot product and customer details so later edits do not rewrite invoices. Payment is assumed cash on delivery; this is not a payment processor.
-- One local application process per data file. Not a multi-user web service.
-
-| Category | Delivery | Minimum | Discount if eligible | Tax |
-|---|---:|---:|---:|---:|
-| Vegetables | 300 | 2000 | 5% | 5% |
-| Fruits | 350 | 2500 | 5% | 5% |
-| Dairy | 400 | 3000 | 8% | 8% |
-| Household Essentials | 500 | 4000 | 10% | 10% |
-
-## Verify
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\test.ps1
-```
-
-```bash
-bash test.sh
-```
-
-The suite creates temporary test directories and never touches your application data. Evidence in `docs/evidence/test-results.txt` records **63 passed, 0 failed** on OpenJDK 21.0.13, Linux. The same tests use a fixed date for deterministic boundaries. Windows/macOS scripts have been supplied but were not executed on those operating systems. Manually remove disposable `freshmart-test-*` directories from your OS temporary folder if desired.
-
-## Data and recovery
-
-Records live in `data/freshmart.db`. An optional first command-line argument selects a different file. Back up the database while the program is stopped. The CLI takes a file lock; do not bypass it by using symlink aliases or editing the file while running. Saves write a candidate snapshot to a temporary sibling, then replace the database; memory is updated only after a successful save. Atomic move is requested, with a normal replace fallback on filesystems that do not support it. The fallback is not guaranteed crash-atomic. A corrupted file causes startup to stop without replacing it: restore a known-good backup, rather than deleting the only copy.
-
-Passwords use salted PBKDF2-HMAC-SHA256 with 600000 iterations. Base64 in the data format is **encoding, not encryption**; customer details remain readable to someone with filesystem access. Login does not provide encryption, account recovery, rate limiting or production-grade protection against a local machine administrator. Keep the folder private. Do not commit data, exported invoices, passwords or real NICs to GitHub.
-
-## Project layout
-
-- `src/freshmart/` — 18 application source files, each prefixed with the Kingston ID.
-- `test/freshmart/` — executable regression suite.
-- `docs/` — editable PlantUML diagrams, rendered diagrams and class signatures.
-- `docs/evidence/` — actual CLI transcript, test log and readable captures of that output.
-- `.vscode/` — Java source paths, integrated terminal and launch configuration.
-- `GITHUB_SETUP.md` — instructions for publishing with your own GitHub account.
-
-The report contains the design discussion, complete application and test source and Harvard references.
+Records are saved to `data/freshmart.db` after every change; exported invoices go to
+`data/invoices/`. Passwords are stored only as salted PBKDF2 hashes. The `data/` folder is
+git-ignored. Use fictional details only.
