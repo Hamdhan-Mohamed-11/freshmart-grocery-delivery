@@ -2,281 +2,439 @@ package freshmart;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.*;
-import java.util.*;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
 
-/** Authenticated use cases. Each mutation is validated, saved, then published. */
+/**
+ * All FreshMart business rules and access control, independent of the console.
+ *
+ * <p>Every change follows the same steps: check the logged-in role, validate the request, apply it
+ * to a copy of the store, save that copy, and only then make it the live store. The service is also
+ * the <em>subject</em> in the Observer pattern: it notifies registered {@link EUK00361749_OrderObserver}s
+ * whenever an order's status changes.
+ */
 public final class EUK00361749_Service {
-  public static final ZoneId ZONE = ZoneId.of("Asia/Colombo");
-  private EUK00361749_Store store;
-  private final Path file;
-  private final Clock clock;
-  private final EUK00361749_PricingPolicy pricing;
-  private String sessionId;
 
-  public EUK00361749_Service(Path file, Clock clock, EUK00361749_PricingPolicy pricing)
-      throws IOException {
-    this.file = file;
-    this.clock = clock.withZone(ZONE);
-    this.pricing = Objects.requireNonNull(pricing);
-    store = EUK00361749_Store.load(file);
-  }
+    public static final ZoneId STORE_ZONE = ZoneId.of("Asia/Colombo");
+    private static final String ORDER_ID_PREFIX = "ORD";
 
-  private void commit(EUK00361749_Store candidate) throws IOException {
-    candidate.save(file);
-    store = candidate;
-  }
+    private final Path dataFile;
+    private final Clock clock;
+    private final EUK00361749_PricingPolicy pricingPolicy;
+    private final List<EUK00361749_OrderObserver> orderObservers = new ArrayList<>();
+    private EUK00361749_Store store;
+    private String loggedInAccountId;
 
-  public boolean needsSetup() {
-    return store.account("ADMIN") == null;
-  }
-
-  public void setupAdmin(String name, String email, char[] password) throws IOException {
-    if (!needsSetup()) throw new IllegalArgumentException("Administrator already configured.");
-    EUK00361749_Store next = new EUK00361749_Store(store);
-    next.put(new EUK00361749_Admin(name, email, EUK00361749_Password.hash(password)));
-    commit(next);
-  }
-
-  private void uniqueEmail(String email, String excluded) {
-    String normal = EUK00361749_Validation.email(email);
-    if (store.accounts().stream()
-        .anyMatch(a -> !a.id().equals(excluded) && a.email().equals(normal)))
-      throw new IllegalArgumentException("Email already registered.");
-  }
-
-  public void register(
-      String nic, String name, String phone, String address, String email, char[] password)
-      throws IOException {
-    if (needsSetup()) throw new IllegalArgumentException("Configure administrator first.");
-    if (store.account(EUK00361749_Validation.nic(nic)) != null)
-      throw new IllegalArgumentException("NIC already registered.");
-    uniqueEmail(email, "");
-    EUK00361749_Customer c =
-        new EUK00361749_Customer(
-            nic, name, phone, address, email, EUK00361749_Password.hash(password));
-    EUK00361749_Store next = new EUK00361749_Store(store);
-    next.put(c);
-    commit(next);
-  }
-
-  public EUK00361749_Account login(String email, char[] password) {
-    logout();
-    String normal = EUK00361749_Validation.email(email);
-    EUK00361749_Account a =
-        store.accounts().stream().filter(x -> x.email().equals(normal)).findFirst().orElse(null);
-    if (a == null || !a.authenticates(password))
-      throw new IllegalArgumentException("Invalid email or password.");
-    sessionId = a.id();
-    return a;
-  }
-
-  public void logout() {
-    sessionId = null;
-  }
-
-  public EUK00361749_Account current() {
-    EUK00361749_Account a = store.account(sessionId);
-    if (a == null) throw new IllegalArgumentException("Login required.");
-    return a;
-  }
-
-  private void admin() {
-    if (!(current() instanceof EUK00361749_Admin))
-      throw new IllegalArgumentException("Administrator access required.");
-  }
-
-  private EUK00361749_Customer customer() {
-    if (!(current() instanceof EUK00361749_Customer c))
-      throw new IllegalArgumentException("Customer access required.");
-    return c;
-  }
-
-  public void updateProfile(String name, String phone, String address, String email)
-      throws IOException {
-    EUK00361749_Customer c = customer();
-    uniqueEmail(email, c.id());
-    EUK00361749_Store next = new EUK00361749_Store(store);
-    next.put(new EUK00361749_Customer(c.id(), name, phone, address, email, c.passwordHash()));
-    commit(next);
-  }
-
-  public void changePassword(char[] oldPassword, char[] newPassword) throws IOException {
-    EUK00361749_Customer c = customer();
-    if (!c.authenticates(oldPassword))
-      throw new IllegalArgumentException("Current password is incorrect.");
-    EUK00361749_Store next = new EUK00361749_Store(store);
-    next.put(
-        new EUK00361749_Customer(
-            c.id(),
-            c.name(),
-            c.phone(),
-            c.address(),
-            c.email(),
-            EUK00361749_Password.hash(newPassword)));
-    commit(next);
-  }
-
-  public void addProduct(EUK00361749_Product product) throws IOException {
-    admin();
-    if (store.product(product.id()) != null)
-      throw new IllegalArgumentException("Product ID exists.");
-    EUK00361749_Store next = new EUK00361749_Store(store);
-    next.put(product);
-    commit(next);
-  }
-
-  private EUK00361749_Product product(String id) {
-    EUK00361749_Product p = store.product(id);
-    if (p == null) throw new IllegalArgumentException("Product not found.");
-    return p;
-  }
-
-  public void updateProduct(EUK00361749_Product product) throws IOException {
-    admin();
-    product(product.id());
-    EUK00361749_Store next = new EUK00361749_Store(store);
-    next.put(product);
-    commit(next);
-  }
-
-  public void setStock(String id, int quantity) throws IOException {
-    admin();
-    updateProduct(product(id).withQuantity(quantity));
-  }
-
-  public void removeProduct(String id) throws IOException {
-    admin();
-    EUK00361749_Product p = product(id);
-    if (store.orders().stream()
-        .flatMap(o -> o.lines().stream())
-        .anyMatch(l -> l.productId().equals(p.id())))
-      throw new IllegalArgumentException(
-          "Product has order history; retain it with zero stock instead.");
-    EUK00361749_Store next = new EUK00361749_Store(store);
-    next.removeProduct(p.id());
-    commit(next);
-  }
-
-  public List<EUK00361749_Product> inventory(EUK00361749_Category category) {
-    current();
-    return store.products().stream()
-        .filter(p -> category == null || p.category() == category)
-        .toList();
-  }
-
-  public List<EUK00361749_Product> search(String query) {
-    current();
-    String q = EUK00361749_Validation.text(query, "Search", 100).toLowerCase(Locale.ROOT);
-    return store.products().stream()
-        .filter(p -> p.id().equalsIgnoreCase(q) || p.name().toLowerCase(Locale.ROOT).contains(q))
-        .toList();
-  }
-
-  public EUK00361749_Order place(
-      Map<String, Integer> basket, LocalDate date, EUK00361749_TimeSlot slot) throws IOException {
-    EUK00361749_Customer c = customer();
-    if (date == null || !date.isAfter(LocalDate.now(clock)))
-      throw new IllegalArgumentException("Delivery must be tomorrow or later.");
-    Objects.requireNonNull(slot);
-    Map<String, Integer> normal = new LinkedHashMap<>();
-    for (var e : basket.entrySet()) {
-      if (e.getValue() == null || e.getValue() <= 0)
-        throw new IllegalArgumentException("Quantity must be positive.");
-      String id = EUK00361749_Validation.productId(e.getKey());
-      if (normal.putIfAbsent(id, e.getValue()) != null)
-        throw new IllegalArgumentException("Duplicate product in basket.");
+    /**
+     * Loads the data file and prepares the service.
+     *
+     * @param dataFile      file used for saving all records
+     * @param clock         source of "today" (fixed in tests)
+     * @param pricingPolicy pricing strategy used for quotes and invoices
+     */
+    public EUK00361749_Service(Path dataFile, Clock clock, EUK00361749_PricingPolicy pricingPolicy) throws IOException {
+        this.dataFile = dataFile;
+        this.clock = clock.withZone(STORE_ZONE);
+        this.pricingPolicy = Objects.requireNonNull(pricingPolicy);
+        this.store = EUK00361749_Store.loadFromFile(dataFile);
     }
-    List<EUK00361749_OrderLine> lines = new ArrayList<>();
-    for (var e : normal.entrySet()) {
-      EUK00361749_Product p = product(e.getKey());
-      if (p.stockStatus() != EUK00361749_StockStatus.IN_STOCK)
-        throw new IllegalArgumentException(p.id() + " is not In Stock.");
-      if (e.getValue() > p.quantity())
-        throw new IllegalArgumentException("Insufficient quantity for " + p.id());
-      lines.add(new EUK00361749_OrderLine(p.id(), p.name(), p.category(), p.price(), e.getValue()));
+
+    // =====================================================================
+    // Observer pattern (subject side)
+    // =====================================================================
+
+    public void addOrderObserver(EUK00361749_OrderObserver observer) {
+        orderObservers.add(Objects.requireNonNull(observer));
     }
-    pricing.calculate(lines); // Validates minimum before any stock mutation.
-    EUK00361749_Order order =
-        new EUK00361749_Order(
-            "OR-" + UUID.randomUUID(),
-            c.id(),
-            c.toString(),
-            date,
-            slot,
-            EUK00361749_OrderStatus.PLACED,
-            lines);
-    EUK00361749_Store next = new EUK00361749_Store(store);
-    for (EUK00361749_OrderLine l : lines) {
-      EUK00361749_Product p = product(l.productId());
-      next.put(p.withQuantity(p.quantity() - l.quantity()));
+
+    private void notifyOrderObservers(EUK00361749_Order order, EUK00361749_OrderStatus previousStatus) {
+        for (EUK00361749_OrderObserver observer : orderObservers) {
+            observer.orderStatusChanged(order, previousStatus);
+        }
     }
-    next.put(order);
-    commit(next);
-    return order;
-  }
 
-  public List<EUK00361749_Order> history() {
-    EUK00361749_Account a = current();
-    return store.orders().stream()
-        .filter(o -> a instanceof EUK00361749_Admin || o.customerId().equals(a.id()))
-        .sorted(
-            Comparator.comparing(EUK00361749_Order::deliveryDate)
-                .thenComparing(EUK00361749_Order::id))
-        .toList();
-  }
+    // =====================================================================
+    // Accounts and login
+    // =====================================================================
 
-  private EUK00361749_Order accessible(String id) {
-    EUK00361749_Account a = current();
-    EUK00361749_Order o = store.order(id);
-    if (o == null || (!(a instanceof EUK00361749_Admin) && !o.customerId().equals(a.id())))
-      throw new IllegalArgumentException("Order not found or access denied.");
-    return o;
-  }
-
-  public void cancel(String id) throws IOException {
-    customer();
-    EUK00361749_Order o = accessible(id);
-    if (!o.status().cancellable())
-      throw new IllegalArgumentException("Order cannot be cancelled at this status.");
-    EUK00361749_Store next = new EUK00361749_Store(store);
-    for (EUK00361749_OrderLine l : o.lines()) {
-      EUK00361749_Product p = product(l.productId());
-      next.put(p.withQuantity(Math.addExact(p.quantity(), l.quantity())));
+    /** @return true when no administrator exists yet (first run). */
+    public boolean needsAdministratorSetup() {
+        return store.findAccount(EUK00361749_Admin.ADMIN_ACCOUNT_ID) == null;
     }
-    next.put(o.withStatus(EUK00361749_OrderStatus.CANCELLED));
-    commit(next);
-  }
 
-  public void advance(String id) throws IOException {
-    admin();
-    EUK00361749_Order o = accessible(id);
-    EUK00361749_Store next = new EUK00361749_Store(store);
-    next.put(o.withStatus(o.status().next()));
-    commit(next);
-  }
+    /** Creates the one administrator account on first run. */
+    public void setupAdministrator(String name, String email, char[] password) throws IOException {
+        if (!needsAdministratorSetup()) {
+            throw new IllegalArgumentException("The administrator account already exists.");
+        }
+        EUK00361749_Store updated = new EUK00361749_Store(store);
+        updated.saveAccount(new EUK00361749_Admin(name, email, EUK00361749_Password.hash(password)));
+        commitChanges(updated);
+    }
 
-  public String invoice(String id) {
-    EUK00361749_Order o = accessible(id);
-    String heading =
-        o.status() == EUK00361749_OrderStatus.CANCELLED
-            ? "CANCELLED ORDER - HISTORICAL QUOTE ONLY"
-            : "FRESHMART INVOICE";
-    return heading
-        + "\nOrder: "
-        + o.id()
-        + " | "
-        + o.status()
-        + "\nCustomer: "
-        + o.customerDetails()
-        + "\nDelivery: "
-        + o.deliveryDate()
-        + " | "
-        + o.slot()
-        + "\n"
-        + pricing.calculate(o.lines())
-        + (o.status() == EUK00361749_OrderStatus.CANCELLED
-            ? "\nAMOUNT DUE: LKR 0.00 (cancelled)"
-            : "\nPayment assumed cash on delivery; no electronic charge.");
-  }
+    /** Registers a new customer; NIC and email must both be unused. */
+    public void registerCustomer(String nic, String name, String contactNumber, String deliveryAddress,
+                                 String email, char[] password) throws IOException {
+        if (needsAdministratorSetup()) {
+            throw new IllegalArgumentException("The administrator must be set up first.");
+        }
+        if (store.findAccount(EUK00361749_Validation.validateNic(nic)) != null) {
+            throw new IllegalArgumentException("This NIC is already registered.");
+        }
+        ensureEmailNotTaken(email, null);
+        EUK00361749_Customer customer = new EUK00361749_Customer(nic, name, contactNumber, deliveryAddress, email,
+                EUK00361749_Password.hash(password));
+        EUK00361749_Store updated = new EUK00361749_Store(store);
+        updated.saveAccount(customer);
+        commitChanges(updated);
+    }
+
+    /**
+     * Logs in by email and password. The previous session is always ended first, so a failed
+     * attempt never leaves someone else logged in.
+     */
+    public EUK00361749_Account login(String email, char[] password) {
+        logout();
+        String normalisedEmail = EUK00361749_Validation.validateEmail(email);
+        for (EUK00361749_Account account : store.getAllAccounts()) {
+            if (account.getEmail().equals(normalisedEmail) && account.checkPassword(password)) {
+                loggedInAccountId = account.getAccountId();
+                return account;
+            }
+        }
+        throw new IllegalArgumentException("Incorrect email or password.");
+    }
+
+    public void logout() {
+        loggedInAccountId = null;
+    }
+
+    /** @return the logged-in account, or null if nobody is logged in. */
+    public EUK00361749_Account findLoggedInAccount() {
+        return store.findAccount(loggedInAccountId);
+    }
+
+    /** @return the logged-in account; fails if nobody is logged in. */
+    public EUK00361749_Account getLoggedInAccount() {
+        EUK00361749_Account account = findLoggedInAccount();
+        if (account == null) {
+            throw new IllegalArgumentException("Please log in first.");
+        }
+        return account;
+    }
+
+    /** Updates the logged-in customer's details. The NIC cannot be changed. */
+    public void updateProfile(String name, String contactNumber, String deliveryAddress, String email) throws IOException {
+        EUK00361749_Customer customer = requireCustomer();
+        ensureEmailNotTaken(email, customer.getAccountId());
+        EUK00361749_Store updated = new EUK00361749_Store(store);
+        updated.saveAccount(new EUK00361749_Customer(customer.getAccountId(), name, contactNumber, deliveryAddress,
+                email, customer.getPasswordHash()));
+        commitChanges(updated);
+    }
+
+    /** Changes the logged-in customer's password after checking the current one. */
+    public void changePassword(char[] currentPassword, char[] newPassword) throws IOException {
+        EUK00361749_Customer customer = requireCustomer();
+        if (!customer.checkPassword(currentPassword)) {
+            throw new IllegalArgumentException("The current password is incorrect.");
+        }
+        EUK00361749_Store updated = new EUK00361749_Store(store);
+        updated.saveAccount(new EUK00361749_Customer(customer.getAccountId(), customer.getName(),
+                customer.getContactNumber(), customer.getDeliveryAddress(), customer.getEmail(),
+                EUK00361749_Password.hash(newPassword)));
+        commitChanges(updated);
+    }
+
+    // =====================================================================
+    // Administrator: products and stock
+    // =====================================================================
+
+    public void addProduct(EUK00361749_Product product) throws IOException {
+        requireAdministrator();
+        if (store.findProduct(product.productId()) != null) {
+            throw new IllegalArgumentException("Product " + product.productId() + " already exists.");
+        }
+        EUK00361749_Store updated = new EUK00361749_Store(store);
+        updated.saveProduct(product);
+        commitChanges(updated);
+    }
+
+    public void updateProduct(EUK00361749_Product product) throws IOException {
+        requireAdministrator();
+        findProductOrFail(product.productId());
+        EUK00361749_Store updated = new EUK00361749_Store(store);
+        updated.saveProduct(product);
+        commitChanges(updated);
+    }
+
+    /** Sets a new stock quantity; the stock status is recalculated automatically. */
+    public void updateStockQuantity(String productId, int newQuantity) throws IOException {
+        requireAdministrator();
+        updateProduct(findProductOrFail(productId).withStockQuantity(newQuantity));
+    }
+
+    /** Sets the stock status directly (e.g. mark a product Out of Stock while checking it). */
+    public void updateStockStatus(String productId, EUK00361749_StockStatus newStatus) throws IOException {
+        requireAdministrator();
+        updateProduct(findProductOrFail(productId).withStockStatus(newStatus));
+    }
+
+    /** Removes a product unless an order refers to it (old invoices must stay valid). */
+    public void removeProduct(String productId) throws IOException {
+        requireAdministrator();
+        EUK00361749_Product product = findProductOrFail(productId);
+        for (EUK00361749_Order order : store.getAllOrders()) {
+            for (EUK00361749_OrderLine line : order.lines()) {
+                if (line.productId().equals(product.productId())) {
+                    throw new IllegalArgumentException("Product has order history; set its stock to 0 instead.");
+                }
+            }
+        }
+        EUK00361749_Store updated = new EUK00361749_Store(store);
+        updated.deleteProduct(product.productId());
+        commitChanges(updated);
+    }
+
+    // =====================================================================
+    // Browsing and searching (any logged-in user)
+    // =====================================================================
+
+    /**
+     * Lists products in one category, or all products when {@code category} is null, sorted by
+     * category and then name using the hand-written merge sort.
+     */
+    public List<EUK00361749_Product> viewInventory(EUK00361749_Category category) {
+        getLoggedInAccount();
+        List<EUK00361749_Product> selected = new ArrayList<>();
+        for (EUK00361749_Product product : store.getAllProducts()) {
+            if (category == null || product.category() == category) {
+                selected.add(product);
+            }
+        }
+        Comparator<EUK00361749_Product> byCategoryThenName = Comparator
+                .comparing(EUK00361749_Product::category)
+                .thenComparing(product -> product.name().toLowerCase(Locale.ROOT));
+        return List.copyOf(EUK00361749_Sorter.mergeSort(selected, byCategoryThenName));
+    }
+
+    /**
+     * Linear search: a product matches if its ID equals the query or its name contains the query
+     * (both case-insensitive).
+     */
+    public List<EUK00361749_Product> searchProducts(String nameOrId) {
+        getLoggedInAccount();
+        String query = EUK00361749_Validation.requireText(nameOrId, "Search text", 100).toLowerCase(Locale.ROOT);
+        List<EUK00361749_Product> matches = new ArrayList<>();
+        for (EUK00361749_Product product : store.getAllProducts()) {
+            if (product.productId().equalsIgnoreCase(query) || product.name().toLowerCase(Locale.ROOT).contains(query)) {
+                matches.add(product);
+            }
+        }
+        return List.copyOf(matches);
+    }
+
+    // =====================================================================
+    // Customer: orders
+    // =====================================================================
+
+    /** Prices a basket without placing the order, so the customer can review it first. */
+    public EUK00361749_Invoice quoteOrder(Map<String, Integer> basket) {
+        requireCustomer();
+        return pricingPolicy.calculate(buildOrderLines(basket));
+    }
+
+    /**
+     * Places an order: checks the delivery date and stock, prices it (which also checks the minimum
+     * order value), reduces stock, saves, and notifies observers.
+     *
+     * @param basket       product ID mapped to quantity
+     * @param deliveryDate tomorrow or later (same-day delivery is not allowed)
+     * @param timeSlot     delivery window
+     */
+    public EUK00361749_Order placeOrder(Map<String, Integer> basket, LocalDate deliveryDate,
+                                        EUK00361749_TimeSlot timeSlot) throws IOException {
+        EUK00361749_Customer customer = requireCustomer();
+        LocalDate today = LocalDate.now(clock);
+        if (deliveryDate == null || !deliveryDate.isAfter(today)) {
+            throw new IllegalArgumentException("Same-day delivery is not available; choose " + today.plusDays(1) + " or later.");
+        }
+        Objects.requireNonNull(timeSlot, "Choose a delivery time slot.");
+
+        List<EUK00361749_OrderLine> orderLines = buildOrderLines(basket);
+        pricingPolicy.calculate(orderLines); // validates the minimum order value before any stock changes
+
+        EUK00361749_Order.EUK00361749_OrderBuilder builder =
+                new EUK00361749_Order.EUK00361749_OrderBuilder(generateNextOrderId(), customer)
+                        .deliverOn(deliveryDate, timeSlot);
+        EUK00361749_Store updated = new EUK00361749_Store(store);
+        for (EUK00361749_OrderLine line : orderLines) {
+            builder.addLine(line);
+            EUK00361749_Product product = findProductOrFail(line.productId());
+            updated.saveProduct(product.withStockQuantity(product.stockQuantity() - line.quantity()));
+        }
+        EUK00361749_Order order = builder.build();
+        updated.saveOrder(order);
+        commitChanges(updated);
+        notifyOrderObservers(order, null);
+        return order;
+    }
+
+    /**
+     * Order history sorted by delivery date: a customer sees only their own orders; the
+     * administrator sees every order.
+     */
+    public List<EUK00361749_Order> viewOrderHistory() {
+        EUK00361749_Account account = getLoggedInAccount();
+        boolean isAdministrator = account instanceof EUK00361749_Admin;
+        List<EUK00361749_Order> visible = new ArrayList<>();
+        for (EUK00361749_Order order : store.getAllOrders()) {
+            if (isAdministrator || order.customerId().equals(account.getAccountId())) {
+                visible.add(order);
+            }
+        }
+        Comparator<EUK00361749_Order> byDeliveryDate = Comparator
+                .comparing(EUK00361749_Order::deliveryDate)
+                .thenComparing(EUK00361749_Order::orderId);
+        return List.copyOf(EUK00361749_Sorter.mergeSort(visible, byDeliveryDate));
+    }
+
+    /** Cancels an order that is not yet Out for Delivery and returns its items to stock. */
+    public void cancelOrder(String orderId) throws IOException {
+        requireCustomer();
+        EUK00361749_Order order = findAccessibleOrder(orderId);
+        if (!order.status().isCancellable()) {
+            throw new IllegalArgumentException("Order " + order.orderId() + " is " + order.status()
+                    + " and can no longer be cancelled.");
+        }
+        EUK00361749_Store updated = new EUK00361749_Store(store);
+        for (EUK00361749_OrderLine line : order.lines()) {
+            EUK00361749_Product product = findProductOrFail(line.productId());
+            updated.saveProduct(product.withStockQuantity(Math.addExact(product.stockQuantity(), line.quantity())));
+        }
+        EUK00361749_Order cancelled = order.withStatus(EUK00361749_OrderStatus.CANCELLED);
+        updated.saveOrder(cancelled);
+        commitChanges(updated);
+        notifyOrderObservers(cancelled, order.status());
+    }
+
+    /** Administrator moves an order to its next delivery stage. */
+    public EUK00361749_Order advanceOrderStatus(String orderId) throws IOException {
+        requireAdministrator();
+        EUK00361749_Order order = findAccessibleOrder(orderId);
+        EUK00361749_Order advanced = order.withStatus(order.status().nextStatus());
+        EUK00361749_Store updated = new EUK00361749_Store(store);
+        updated.saveOrder(advanced);
+        commitChanges(updated);
+        notifyOrderObservers(advanced, order.status());
+        return advanced;
+    }
+
+    /** @return the formatted invoice for an order the logged-in user may see. */
+    public String generateInvoice(String orderId) {
+        EUK00361749_Order order = findAccessibleOrder(orderId);
+        return pricingPolicy.calculate(order.lines()).toDocument(order);
+    }
+
+    // =====================================================================
+    // Helpers
+    // =====================================================================
+
+    /** Saves the prepared copy first; only a successful save replaces the live store. */
+    private void commitChanges(EUK00361749_Store updated) throws IOException {
+        updated.saveToFile(dataFile);
+        store = updated;
+    }
+
+    /** Turns a basket into order lines, checking quantities, duplicates and stock. */
+    private List<EUK00361749_OrderLine> buildOrderLines(Map<String, Integer> basket) {
+        Map<String, Integer> normalisedBasket = new LinkedHashMap<>();
+        for (Map.Entry<String, Integer> entry : basket.entrySet()) {
+            if (entry.getValue() == null || entry.getValue() <= 0) {
+                throw new IllegalArgumentException("Quantity must be at least 1.");
+            }
+            String productId = EUK00361749_Validation.validateProductId(entry.getKey());
+            if (normalisedBasket.putIfAbsent(productId, entry.getValue()) != null) {
+                throw new IllegalArgumentException("Product " + productId + " is in the basket twice.");
+            }
+        }
+        if (normalisedBasket.isEmpty()) {
+            throw new IllegalArgumentException("An order must contain at least one product.");
+        }
+        List<EUK00361749_OrderLine> lines = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : normalisedBasket.entrySet()) {
+            EUK00361749_Product product = findProductOrFail(entry.getKey());
+            if (product.stockStatus() != EUK00361749_StockStatus.IN_STOCK) {
+                throw new IllegalArgumentException(product.productId() + " is " + product.stockStatus()
+                        + "; only In Stock products can be ordered.");
+            }
+            if (entry.getValue() > product.stockQuantity()) {
+                throw new IllegalArgumentException("Only " + product.stockQuantity() + " of " + product.productId()
+                        + " available.");
+            }
+            lines.add(EUK00361749_OrderLine.fromProduct(product, entry.getValue()));
+        }
+        return lines;
+    }
+
+    private void requireAdministrator() {
+        if (!(getLoggedInAccount() instanceof EUK00361749_Admin)) {
+            throw new IllegalArgumentException("Only the administrator can do this.");
+        }
+    }
+
+    private EUK00361749_Customer requireCustomer() {
+        if (!(getLoggedInAccount() instanceof EUK00361749_Customer customer)) {
+            throw new IllegalArgumentException("Only customers can do this.");
+        }
+        return customer;
+    }
+
+    private void ensureEmailNotTaken(String email, String ownAccountId) {
+        String normalisedEmail = EUK00361749_Validation.validateEmail(email);
+        for (EUK00361749_Account account : store.getAllAccounts()) {
+            if (!account.getAccountId().equals(ownAccountId) && account.getEmail().equals(normalisedEmail)) {
+                throw new IllegalArgumentException("This email is already registered.");
+            }
+        }
+    }
+
+    private EUK00361749_Product findProductOrFail(String productId) {
+        EUK00361749_Product product = store.findProduct(productId);
+        if (product == null) {
+            throw new IllegalArgumentException("Product " + productId.trim().toUpperCase(Locale.ROOT) + " not found.");
+        }
+        return product;
+    }
+
+    /** Customers may only open their own orders; the administrator may open any order. */
+    private EUK00361749_Order findAccessibleOrder(String orderId) {
+        EUK00361749_Account account = getLoggedInAccount();
+        EUK00361749_Order order = store.findOrder(orderId);
+        boolean allowed = order != null
+                && (account instanceof EUK00361749_Admin || order.customerId().equals(account.getAccountId()));
+        if (!allowed) {
+            throw new IllegalArgumentException("Order not found.");
+        }
+        return order;
+    }
+
+    /** Next ID in the sequence ORD0001, ORD0002, ... */
+    private String generateNextOrderId() {
+        int highestNumber = 0;
+        for (EUK00361749_Order order : store.getAllOrders()) {
+            if (order.orderId().matches(ORDER_ID_PREFIX + "\\d+")) {
+                highestNumber = Math.max(highestNumber, Integer.parseInt(order.orderId().substring(ORDER_ID_PREFIX.length())));
+            }
+        }
+        return String.format("%s%04d", ORDER_ID_PREFIX, highestNumber + 1);
+    }
 }
