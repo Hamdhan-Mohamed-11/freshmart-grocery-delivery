@@ -6,7 +6,10 @@ import java.nio.file.*;
 import java.time.*;
 import java.util.*;
 
-/** Dependency-free regression suite; all fixtures use disposable directories. */
+/**
+ * FreshMart regression test cases. Each case covers a normal, boundary or invalid input; all
+ * fixtures use disposable temporary directories and a fixed clock (10 Nov 2026).
+ */
 public final class EUK00361749_Tests {
   private static final char[] PASSWORD = "FreshMart demo passphrase".toCharArray();
   private static final String HASH = EUK00361749_Password.hash(PASSWORD);
@@ -16,7 +19,7 @@ public final class EUK00361749_Tests {
   private static int passed, failed;
 
   @FunctionalInterface
-  private interface EUK00361749_Check {
+  interface EUK00361749_Check {
     void run() throws Exception;
   }
 
@@ -94,27 +97,57 @@ public final class EUK00361749_Tests {
             List.of(new EUK00361749_OrderLine("X", "Example", c, new BigDecimal(amount), 1)));
   }
 
+  /** One row of the test-case table: ID, function tested, input, expected outcome and the check. */
+  record EUK00361749_TestCase(
+      String id, String name, String input, String expected, EUK00361749_Check body) {}
+
+  private static final List<EUK00361749_TestCase> CASES = new ArrayList<>();
+
+  /** Registers a test case; cases are executed by JUnit or by {@link #main}. */
   private static void test(String name, String input, String expected, EUK00361749_Check body) {
-    try {
-      body.run();
-      passed++;
-      System.out.println(
-          String.format("T%02d | %s | %s | %s | PASS", passed + failed, name, input, expected));
-    } catch (Exception | AssertionError e) {
-      failed++;
-      System.out.println(
-          String.format(
-              "T%02d | %s | %s | %s | FAIL %s", passed + failed, name, input, expected, e));
-    }
+    String id = String.format("T%02d", CASES.size() + 1);
+    CASES.add(new EUK00361749_TestCase(id, name, input, expected, body));
   }
 
-  public static void main(String[] args) throws Exception {
+  /** @return every test case in table order (used by the JUnit test factory). */
+  static synchronized List<EUK00361749_TestCase> allCases() {
+    if (CASES.isEmpty()) defineCases();
+    return List.copyOf(CASES);
+  }
+
+  /**
+   * Plain-Java runner that prints the results as the report's test table (ID | Function | Input |
+   * Expected | Result). The same cases also run under JUnit 5 through EUK00361749_JUnitTests.
+   */
+  public static void main(String[] args) {
     System.out.println(
         "FreshMart regression execution | Java "
             + System.getProperty("java.version")
             + " | "
             + Instant.now());
     System.out.println("ID | Function | Input | Expected and verified outcome | Result");
+    for (EUK00361749_TestCase testCase : allCases()) {
+      try {
+        testCase.body().run();
+        passed++;
+        System.out.println(
+            String.format(
+                "%s | %s | %s | %s | PASS",
+                testCase.id(), testCase.name(), testCase.input(), testCase.expected()));
+      } catch (Exception | AssertionError e) {
+        failed++;
+        System.out.println(
+            String.format(
+                "%s | %s | %s | %s | FAIL %s",
+                testCase.id(), testCase.name(), testCase.input(), testCase.expected(), e));
+      }
+    }
+    System.out.println("RESULT: " + passed + " passed; " + failed + " failed.");
+    if (failed > 0) System.exit(1);
+  }
+
+  /** Defines all test cases in the order they appear in the report. */
+  private static void defineCases() {
     test(
         "First-run setup",
         "New file; create admin twice",
@@ -893,7 +926,5 @@ public final class EUK00361749_Tests {
           check(accounts.get(0).getMenuTitle().startsWith("ADMINISTRATOR"));
           check(accounts.get(1).getMenuTitle().startsWith("CUSTOMER"));
         });
-    System.out.println("RESULT: " + passed + " passed; " + failed + " failed.");
-    if (failed > 0) System.exit(1);
   }
 }

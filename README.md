@@ -24,9 +24,14 @@ their next login.
 
 Windows: `./test.ps1` &nbsp;|&nbsp; macOS/Linux: `bash test.sh`
 
-The regression suite runs 71 automated test cases (normal, boundary and invalid inputs) against
-a fixed clock (10 Nov 2026) using temporary data files, and saves the results table to
-`docs/evidence/test-results.txt`.
+The script compiles the project and runs 71 automated test cases (normal, boundary and invalid
+inputs) with **JUnit 5** (`lib/junit-platform-console-standalone-1.11.4.jar`, included). Each row
+of the report's test table (T01–T71) is its own JUnit test, created by a `@TestFactory` in
+`EUK00361749_JUnitTests`. The cases use a fixed clock (10 Nov 2026) and temporary data files. The
+script then saves the same cases as a results table to `docs/evidence/test-results.txt`.
+
+In VS Code the tests also appear in the **Testing** panel (beaker icon), because
+`.vscode/settings.json` adds the JUnit jar to the project.
 
 ## Design summary
 

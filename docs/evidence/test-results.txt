@@ -1,4 +1,4 @@
-﻿FreshMart regression execution | Java 21.0.12.1 | 2026-11-12T09:22:08.518009200Z
+﻿FreshMart regression execution | Java 21.0.12.1 | 2026-11-12T10:00:15.036106400Z
 ID | Function | Input | Expected and verified outcome | Result
 T01 | First-run setup | New file; create admin twice | First succeeds; duplicate rejected | PASS
 T02 | Login success | Uppercase customer email | Customer authenticated | PASS
