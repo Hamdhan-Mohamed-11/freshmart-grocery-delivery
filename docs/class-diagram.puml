@@ -41,17 +41,23 @@ class EUK00361749_Customer {
   + getDeliveryAddress() : String
   + getRole() : String
   + getMenuTitle() : String
+  + toString() : String
 }
 
 class EUK00361749_Password <<utility>> {
   ~ {static} ITERATIONS : int
   + {static} MINIMUM_LENGTH : int
+  + {static} MAXIMUM_LENGTH : int
+  - {static} SALT_BYTES : int
+  - {static} HASH_BITS : int
+  - EUK00361749_Password()
   + {static} hash(password : char[]) : String
   + {static} verify(password : char[], storedHash : String) : boolean
   - {static} deriveKey(password : char[], salt : byte[], iterations : int) : byte[]
 }
 
 class EUK00361749_Validation <<utility>> {
+  - EUK00361749_Validation()
   + {static} requireText(value : String, fieldName : String, maxLength : int) : String
   + {static} validateEmail(value : String) : String
   + {static} validateNic(value : String) : String
@@ -73,18 +79,23 @@ enum EUK00361749_Category {
   + getMinimumOrderValue() : BigDecimal
   + getDiscountRate() : BigDecimal
   + getTaxRate() : BigDecimal
+  + toString() : String
 }
 
 enum EUK00361749_StockStatus {
   IN_STOCK
   LOW_STOCK
   OUT_OF_STOCK
+  - displayName : String
+  + toString() : String
 }
 
 enum EUK00361749_TimeSlot {
   MORNING_09_12
   AFTERNOON_12_16
   EVENING_16_20
+  - displayName : String
+  + toString() : String
 }
 
 enum EUK00361749_OrderStatus {
@@ -93,21 +104,33 @@ enum EUK00361749_OrderStatus {
   OUT_FOR_DELIVERY
   DELIVERED
   CANCELLED
+  - displayName : String
   + isCancellable() : boolean
   + nextStatus() : EUK00361749_OrderStatus
+  + toString() : String
 }
 
 class EUK00361749_Product <<record>> {
   + {static} LOW_STOCK_LIMIT : int
+  - {static} MAXIMUM_PRICE : BigDecimal
   - productId : String
   - name : String
   - category : EUK00361749_Category
   - unitPrice : BigDecimal
   - stockQuantity : int
   - stockStatus : EUK00361749_StockStatus
+  + EUK00361749_Product(productId : String, name : String, category : Category, unitPrice : BigDecimal, stockQuantity : int, stockStatus : StockStatus)
+  + EUK00361749_Product(productId : String, name : String, category : Category, unitPrice : BigDecimal, stockQuantity : int)
+  + productId() : String
+  + name() : String
+  + category() : EUK00361749_Category
+  + unitPrice() : BigDecimal
+  + stockQuantity() : int
+  + stockStatus() : EUK00361749_StockStatus
   + {static} statusForQuantity(quantity : int) : EUK00361749_StockStatus
   + withStockQuantity(newQuantity : int) : EUK00361749_Product
   + withStockStatus(newStatus : StockStatus) : EUK00361749_Product
+  + toString() : String
 }
 
 class EUK00361749_OrderLine <<record>> {
@@ -116,6 +139,12 @@ class EUK00361749_OrderLine <<record>> {
   - category : EUK00361749_Category
   - unitPrice : BigDecimal
   - quantity : int
+  + EUK00361749_OrderLine(productId : String, name : String, category : Category, unitPrice : BigDecimal, quantity : int)
+  + productId() : String
+  + name() : String
+  + category() : EUK00361749_Category
+  + unitPrice() : BigDecimal
+  + quantity() : int
   + {static} fromProduct(product : Product, quantity : int) : EUK00361749_OrderLine
   + lineTotal() : BigDecimal
 }
@@ -128,7 +157,16 @@ class EUK00361749_Order <<record>> {
   - timeSlot : EUK00361749_TimeSlot
   - status : EUK00361749_OrderStatus
   - lines : List<EUK00361749_OrderLine>
+  + EUK00361749_Order(orderId : String, customerId : String, customerDetails : String, deliveryDate : LocalDate, timeSlot : TimeSlot, status : OrderStatus, lines : List<OrderLine>)
+  + orderId() : String
+  + customerId() : String
+  + customerDetails() : String
+  + deliveryDate() : LocalDate
+  + timeSlot() : EUK00361749_TimeSlot
+  + status() : EUK00361749_OrderStatus
+  + lines() : List<EUK00361749_OrderLine>
   + withStatus(newStatus : OrderStatus) : EUK00361749_Order
+  + toString() : String
 }
 
 class "EUK00361749_Order.EUK00361749_OrderBuilder" as EUK00361749_OrderBuilder <<static nested>> {
@@ -137,20 +175,32 @@ class "EUK00361749_Order.EUK00361749_OrderBuilder" as EUK00361749_OrderBuilder <
   - lines : List<EUK00361749_OrderLine>
   - deliveryDate : LocalDate
   - timeSlot : EUK00361749_TimeSlot
+  + EUK00361749_OrderBuilder(orderId : String, customer : Customer)
   + addLine(line : OrderLine) : EUK00361749_OrderBuilder
   + deliverOn(date : LocalDate, slot : TimeSlot) : EUK00361749_OrderBuilder
   + build() : EUK00361749_Order
 }
 
 class EUK00361749_Invoice <<record>> {
+  - {static} DOUBLE_LINE : String
+  - {static} SINGLE_LINE : String
   - lines : List<EUK00361749_OrderLine>
   - productTotal : BigDecimal
   - discount : BigDecimal
   - deliveryFee : BigDecimal
   - tax : BigDecimal
   - finalPayable : BigDecimal
+  + EUK00361749_Invoice(lines : List<OrderLine>, productTotal : BigDecimal, discount : BigDecimal, deliveryFee : BigDecimal, tax : BigDecimal, finalPayable : BigDecimal)
+  + lines() : List<EUK00361749_OrderLine>
+  + productTotal() : BigDecimal
+  + discount() : BigDecimal
+  + deliveryFee() : BigDecimal
+  + tax() : BigDecimal
+  + finalPayable() : BigDecimal
+  + toString() : String
   + toDocument(order : Order) : String
   + {static} formatMoney(amount : BigDecimal) : String
+  - {static} totalRow(label : String, value : String) : String
 }
 
 interface EUK00361749_PricingPolicy <<Strategy>> {
@@ -175,14 +225,17 @@ class EUK00361749_CustomerNotifier {
 }
 
 class EUK00361749_Sorter <<utility>> {
+  - EUK00361749_Sorter()
   + {static} mergeSort(items : List<T>, order : Comparator<T>) : List<T>
   - {static} merge(left : List<T>, right : List<T>, order : Comparator<T>) : List<T>
 }
 
 class EUK00361749_Store {
+  - {static} FILE_HEADER : String
   - accountsById : Map<String, EUK00361749_Account>
   - productsById : Map<String, EUK00361749_Product>
   - ordersById : Map<String, EUK00361749_Order>
+  + EUK00361749_Store()
   + EUK00361749_Store(original : EUK00361749_Store)
   + getAllAccounts() : List<EUK00361749_Account>
   + getAllProducts() : List<EUK00361749_Product>
@@ -196,21 +249,31 @@ class EUK00361749_Store {
   ~ deleteProduct(productId : String) : void
   + saveToFile(file : Path) : void
   + {static} loadFromFile(file : Path) : EUK00361749_Store
+  - loadAccount(fields : String[], seenEmails : Set<String>) : void
+  - loadProduct(fields : String[]) : void
+  - assembleOrders(headers : Map<String, String[]>, linesByOrder : Map<String, List<OrderLine>>) : void
+  - {static} encodeRow(fields : String...) : String
+  - {static} decodeRow(line : String) : String[]
 }
 
 class EUK00361749_Service <<Subject>> {
   + {static} STORE_ZONE : ZoneId
+  - {static} ORDER_ID_PREFIX : String
   - dataFile : Path
   - clock : Clock
   - pricingPolicy : EUK00361749_PricingPolicy
   - orderObservers : List<EUK00361749_OrderObserver>
   - store : EUK00361749_Store
   - loggedInAccountId : String
+  + EUK00361749_Service(dataFile : Path, clock : Clock, pricingPolicy : PricingPolicy)
   + addOrderObserver(observer : OrderObserver) : void
+  + needsAdministratorSetup() : boolean
   + setupAdministrator(name : String, email : String, password : char[]) : void
   + registerCustomer(nic : String, name : String, phone : String, address : String, email : String, password : char[]) : void
   + login(email : String, password : char[]) : EUK00361749_Account
   + logout() : void
+  + findLoggedInAccount() : EUK00361749_Account
+  + getLoggedInAccount() : EUK00361749_Account
   + updateProfile(name : String, phone : String, address : String, email : String) : void
   + changePassword(current : char[], next : char[]) : void
   + addProduct(product : Product) : void
@@ -229,19 +292,50 @@ class EUK00361749_Service <<Subject>> {
   - notifyOrderObservers(order : Order, previous : OrderStatus) : void
   - commitChanges(updated : Store) : void
   - buildOrderLines(basket : Map<String, Integer>) : List<OrderLine>
+  - requireAdministrator() : void
+  - requireCustomer() : EUK00361749_Customer
+  - ensureEmailNotTaken(email : String, ownAccountId : String) : void
+  - findProductOrFail(productId : String) : EUK00361749_Product
+  - findAccessibleOrder(orderId : String) : EUK00361749_Order
   - generateNextOrderId() : String
 }
 
 class EUK00361749_Main {
+  - {static} DIVIDER : String
   - service : EUK00361749_Service
   - notifier : EUK00361749_CustomerNotifier
   - console : Console
   - scanner : Scanner
+  - invoiceFolder : Path
+  - EUK00361749_Main(service : Service, invoiceFolder : Path)
   - run() : void
-  - administratorMenu(admin : Account) : void
+  - startMenu() : boolean
+  - administratorMenu(administrator : Account) : void
   - customerMenu(customer : Account) : void
+  - setupAdministrator() : void
+  - registerCustomer() : void
+  - login() : void
+  - logout() : void
+  - editProfile() : void
+  - changePassword() : void
+  - showNotifications(customer : Account) : void
+  - browseInventory() : void
+  - readProductDetails() : EUK00361749_Product
+  - removeProduct() : void
   - placeOrder() : void
-  - readInt(prompt : String, min : int, max : int) : int
+  - cancelOrder() : void
+  - viewInvoice() : void
+  - {static} printHeading(title : String) : void
+  - {static} printProducts(products : List<Product>) : void
+  - {static} printOrders(orders : List<Order>) : void
+  - readText(prompt : String) : String
+  - readText(prompt : String, allowBlank : boolean) : String
+  - readPassword(prompt : String) : char[]
+  - readInt(prompt : String, minimum : int, maximum : int) : int
+  - readMoney(prompt : String) : BigDecimal
+  - readDate(prompt : String) : LocalDate
+  - chooseOption(prompt : String, options : T[]) : T
+  - confirm(question : String) : boolean
   + {static} main(args : String[]) : void
 }
 
