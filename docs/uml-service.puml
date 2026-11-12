@@ -1,0 +1,48 @@
+@startuml
+!pragma layout smetana
+skinparam dpi 160
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 12
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #263747
+skinparam ArrowColor #263747
+hide empty members
+class EUK00361749_Service {
+ + {static} ZoneId ZONE
+ - Store store
+ - Path file
+ - Clock clock
+ - PricingPolicy pricing
+ - String sessionId
+ + Service(Path, Clock, PricingPolicy)
+ - void commit(Store)
+ + boolean needsSetup()
+ + void setupAdmin(String, String, char[])
+ - void uniqueEmail(String, String)
+ + void register(String, String, String, String, String, char[])
+ + Account login(String, char[])
+ + void logout()
+ + Account current()
+ - void admin()
+ - Customer customer()
+ + void updateProfile(String, String, String, String)
+ + void changePassword(char[], char[])
+ + void addProduct(Product)
+ - Product product(String)
+ + void updateProduct(Product)
+ + void setStock(String, int)
+ + void removeProduct(String)
+ + List<Product> inventory(Category)
+ + List<Product> search(String)
+ + Order place(Map<String, Integer>, LocalDate, TimeSlot)
+ + List<Order> history()
+ - Order accessible(String)
+ + void cancel(String)
+ + void advance(String)
+ + String invoice(String)
+}
+
+
+@enduml

@@ -1,0 +1,67 @@
+@startuml
+!pragma layout smetana
+skinparam dpi 160
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 12
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #263747
+skinparam ArrowColor #263747
+hide empty members
+class EUK00361749_Order <<record>> {
+ - String id
+ - String customerId
+ - String customerDetails
+ - LocalDate deliveryDate
+ - TimeSlot slot
+ - OrderStatus status
+ - List<OrderLine> lines
+ + Order(String, String, String, LocalDate, TimeSlot, OrderStatus, List<OrderLine>)
+ + Order withStatus(OrderStatus)
+ + String toString()
+ + String id()
+ + String customerId()
+ + String customerDetails()
+ + LocalDate deliveryDate()
+ + TimeSlot slot()
+ + OrderStatus status()
+ + List<OrderLine> lines()
+}
+
+class EUK00361749_OrderLine <<record>> {
+ - String productId
+ - String name
+ - Category category
+ - BigDecimal unitPrice
+ - int quantity
+ + OrderLine(String, String, Category, BigDecimal, int)
+ + BigDecimal total()
+ + String toString()
+ + String productId()
+ + String name()
+ + Category category()
+ + BigDecimal unitPrice()
+ + int quantity()
+}
+
+class EUK00361749_Invoice <<record>> {
+ - BigDecimal productTotal
+ - BigDecimal discount
+ - BigDecimal delivery
+ - BigDecimal tax
+ - BigDecimal payable
+ - String detail
+ + Invoice(BigDecimal, BigDecimal, BigDecimal, BigDecimal, BigDecimal, String)
+ + String toString()
+ + BigDecimal productTotal()
+ + BigDecimal discount()
+ + BigDecimal delivery()
+ + BigDecimal tax()
+ + BigDecimal payable()
+ + String detail()
+}
+
+EUK00361749_Order "1" *-- "1..*" EUK00361749_OrderLine
+EUK00361749_OrderLine -[hidden]down- EUK00361749_Invoice
+@enduml

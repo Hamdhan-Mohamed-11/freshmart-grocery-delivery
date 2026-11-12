@@ -1,0 +1,66 @@
+FreshMart regression execution | Java 21.0.13 | 2026-11-10T09:54:57.331364286Z
+ID | Function | Input | Expected and verified outcome | Result
+T01 | First-run setup | New file; create admin twice | First succeeds; duplicate rejected | PASS
+T02 | Login success | Uppercase customer email | Customer authenticated | PASS
+T03 | Wrong password | Incorrect password | Rejected and previous session cleared | PASS
+T04 | Unknown email | unknown@example.com | Rejected | PASS
+T05 | Guest access | Logout then browse | Rejected | PASS
+T06 | Role isolation | Customer adds product | Rejected | PASS
+T07 | Admin order restriction | Admin places order | Rejected | PASS
+T08 | Register account | New NIC and email | New customer can log in | PASS
+T09 | Duplicate NIC | Existing NIC | Rejected | PASS
+T10 | Duplicate email | Existing email in uppercase | Rejected | PASS
+T11 | Invalid NIC | ABC | Rejected | PASS
+T12 | Legacy NIC | 123456789v | Normalized uppercase V | PASS
+T13 | Invalid contact | Malformed email and phone | Both rejected | PASS
+T14 | Password length | Short password | Rejected | PASS
+T15 | Salt uniqueness | Hash same password twice | Different hashes; both verify | PASS
+T16 | Malformed hash | Colon only | False without crash | PASS
+T17 | Profile update | New email and address | Same NIC; new details used | PASS
+T18 | Profile email clash | Other customer email | Rejected; original unchanged | PASS
+T19 | Password change | Correct current and new password | Old rejected; new works | PASS
+T20 | Password change denied | Wrong current password | Rejected; old still valid | PASS
+T21 | Add and update product | New Z then price 3500 | New value returned | PASS
+T22 | Duplicate product | Existing V1 | Rejected | PASS
+T23 | Remove unused product | F1 without history | Removed | PASS
+T24 | Retain historical product | V1 after order | Removal rejected | PASS
+T25 | Product validation | Negative price or stock; 3 decimals | All rejected | PASS
+T26 | Stock boundaries | Quantities 0 1 5 6 | Out Low Low In | PASS
+T27 | Category inventory | DAIRY filter | Only D1 returned | PASS
+T28 | Search | v1 and case-insensitive Demo | Exact ID one; name four | PASS
+T29 | Empty order | Empty basket | Rejected; history empty | PASS
+T30 | Bad quantity | Zero and negative | Both rejected | PASS
+T31 | Unknown product | MISSING | Rejected | PASS
+T32 | Duplicate normalized ID | V1 and v1 | Rejected | PASS
+T33 | Same-day delivery | 2026-11-10 | Rejected | PASS
+T34 | Past delivery | 2026-11-09 | Rejected | PASS
+T35 | Colombo date boundary | UTC 20:00 is next day in Colombo | Local same-day rejected | PASS
+T36 | Tomorrow delivery | Valid V1 x2 | Placed; stock becomes 18 | PASS
+T37 | Insufficient stock | V1 x21 when 20 | Rejected; stock remains 20 | PASS
+T38 | Low stock excluded | Stock 5 then request 2 | Rejected | PASS
+T39 | Out of stock excluded | Stock 0 | Rejected | PASS
+T40 | Basket all or nothing | V1 valid plus F1 x99 | No stock or history change | PASS
+T41 | Vegetable minimum | 1999.99 then 2000 | Reject below; payable 2400 | PASS
+T42 | Fruit minimum | 2499.99 then 2500 | Reject below; payable 2975 | PASS
+T43 | Dairy minimum | 2999.99 then 3000 | Reject below; payable 3640 | PASS
+T44 | Household minimum | 3999.99 then 4000 | Reject below; payable 4900 | PASS
+T45 | Exact discount threshold | Vegetables 10000 | Discount 0; total 10800 | PASS
+T46 | Above discount threshold | Vegetables 10000.01 | Discount 500; total 10275.01 | PASS
+T47 | Mixed category billing | Vegetables 6000; household 6000 | Discount 900; delivery 500; tax 825; total 12425 | PASS
+T48 | Mixed minimum | Vegetables 2000 plus household 1000 | Rejected below highest minimum 4000 | PASS
+T49 | Dairy discount | 12000 | Discount 960; tax 883.20; total 12323.20 | PASS
+T50 | Rounding | Vegetables 2000.10 | Tax 100.01 half up | PASS
+T51 | Cancel placed | V1 x2 then cancel | Stock restored to 20; cancelled due zero | PASS
+T52 | Double cancellation | Cancel same order twice | Second rejected; stock stays 20 | PASS
+T53 | Cancel preparing | Advance once then cancel | Allowed; stock restored | PASS
+T54 | Cancellation cutoff | Advance twice then cancel | Rejected at Out for Delivery | PASS
+T55 | Delivery terminal state | Advance three times then once more | Delivered; further advance rejected | PASS
+T56 | Customer status control | Customer attempts advance | Rejected | PASS
+T57 | Order ownership | Second customer views/cancels first order | History empty; invoice/cancel rejected | PASS
+T58 | Historical snapshots | Change profile and product price after order | Original customer and price retained | PASS
+T59 | Persistent restart | Order then reopen data file | Login; same order and stock | PASS
+T60 | No plaintext password | Save credentials and inspect decoded fields | Plaintext absent; PBKDF2 record present | PASS
+T61 | Corrupt file | Invalid header | Load rejected; bytes unchanged | PASS
+T62 | Save failure rollback | Replace database with nonempty directory | Order rejected; memory stock/history unchanged | PASS
+T63 | Immutable snapshots | Modify returned inventory and order lines | Both unmodifiable | PASS
+RESULT: 63 passed; 0 failed.

@@ -1,0 +1,88 @@
+@startuml
+!pragma layout smetana
+skinparam dpi 160
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 12
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #263747
+skinparam ArrowColor #263747
+hide empty members
+class EUK00361749_Main {
+}
+
+class EUK00361749_Service {
+}
+
+class EUK00361749_Store {
+}
+
+abstract class EUK00361749_Account {
+}
+
+class EUK00361749_Admin {
+}
+
+class EUK00361749_Customer {
+}
+
+class EUK00361749_Product <<record>> {
+}
+
+class EUK00361749_Order <<record>> {
+}
+
+class EUK00361749_OrderLine <<record>> {
+}
+
+interface EUK00361749_PricingPolicy {
+}
+
+class EUK00361749_CategoryPricing {
+}
+
+class EUK00361749_Invoice <<record>> {
+}
+
+enum EUK00361749_Category {
+}
+
+enum EUK00361749_StockStatus {
+}
+
+enum EUK00361749_OrderStatus {
+}
+
+enum EUK00361749_TimeSlot {
+}
+
+class EUK00361749_Validation {
+}
+
+class EUK00361749_Password {
+}
+
+EUK00361749_Main --> EUK00361749_Service
+EUK00361749_Service --> EUK00361749_Store
+EUK00361749_Service --> EUK00361749_PricingPolicy
+EUK00361749_CategoryPricing ..|> EUK00361749_PricingPolicy
+EUK00361749_CategoryPricing ..> EUK00361749_Invoice
+EUK00361749_Admin --|> EUK00361749_Account
+EUK00361749_Customer --|> EUK00361749_Account
+EUK00361749_Store "1" o-- "0..*" EUK00361749_Account
+EUK00361749_Store "1" o-- "0..*" EUK00361749_Product
+EUK00361749_Store "1" o-- "0..*" EUK00361749_Order
+EUK00361749_Customer "1" <-- "0..*" EUK00361749_Order : customerId
+EUK00361749_Order "1" *-- "1..*" EUK00361749_OrderLine
+EUK00361749_OrderLine "0..*" --> "1" EUK00361749_Product : productId
+EUK00361749_OrderLine --> EUK00361749_Category
+EUK00361749_Product --> EUK00361749_Category
+EUK00361749_Product ..> EUK00361749_StockStatus
+EUK00361749_Order --> EUK00361749_OrderStatus
+EUK00361749_Order --> EUK00361749_TimeSlot
+EUK00361749_Account ..> EUK00361749_Password
+EUK00361749_Account ..> EUK00361749_Validation
+EUK00361749_Product ..> EUK00361749_Validation
+
+@enduml

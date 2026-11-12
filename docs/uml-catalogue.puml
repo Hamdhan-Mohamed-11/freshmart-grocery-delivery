@@ -1,0 +1,55 @@
+@startuml
+!pragma layout smetana
+skinparam dpi 160
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 12
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #263747
+skinparam ArrowColor #263747
+hide empty members
+class EUK00361749_Product <<record>> {
+ - String id
+ - String name
+ - Category category
+ - BigDecimal price
+ - int quantity
+ + {static} int LOW_STOCK_LIMIT
+ + Product(String, String, Category, BigDecimal, int)
+ + StockStatus stockStatus()
+ + Product withQuantity(int)
+ + String toString()
+ + String id()
+ + String name()
+ + Category category()
+ + BigDecimal price()
+ + int quantity()
+}
+
+enum EUK00361749_Category {
+ + {static} Category VEGETABLES
+ + {static} Category FRUITS
+ + {static} Category DAIRY
+ + {static} Category HOUSEHOLD_ESSENTIALS
+ - BigDecimal delivery
+ - BigDecimal minimum
+ - BigDecimal discount
+ - BigDecimal tax
+ - Category(int, int, String, String)
+ + BigDecimal delivery()
+ + BigDecimal minimum()
+ + BigDecimal discount()
+ + BigDecimal tax()
+}
+
+enum EUK00361749_StockStatus {
+ + {static} StockStatus IN_STOCK
+ + {static} StockStatus LOW_STOCK
+ + {static} StockStatus OUT_OF_STOCK
+ - StockStatus()
+}
+
+EUK00361749_Product --> EUK00361749_Category
+EUK00361749_Product ..> EUK00361749_StockStatus
+@enduml
