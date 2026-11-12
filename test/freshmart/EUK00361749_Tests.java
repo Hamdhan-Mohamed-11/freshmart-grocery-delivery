@@ -11,7 +11,7 @@ public final class EUK00361749_Tests {
   private static final char[] PASSWORD = "FreshMart demo passphrase".toCharArray();
   private static final String HASH = EUK00361749_Password.hash(PASSWORD);
   private static final Clock CLOCK =
-      Clock.fixed(Instant.parse("2026-11-10T10:00:00Z"), EUK00361749_Service.ZONE);
+      Clock.fixed(Instant.parse("2026-11-10T10:00:00Z"), EUK00361749_Service.STORE_ZONE);
   private static final LocalDate TOMORROW = LocalDate.of(2026, 11, 11);
   private static int passed, failed;
 
@@ -45,11 +45,11 @@ public final class EUK00361749_Tests {
 
   private static EUK00361749_Store seed() {
     EUK00361749_Store s = new EUK00361749_Store();
-    s.put(new EUK00361749_Admin("Test Admin", "admin@example.com", HASH));
-    s.put(
+    s.saveAccount(new EUK00361749_Admin("Test Admin", "admin@example.com", HASH));
+    s.saveAccount(
         new EUK00361749_Customer(
             "200012345678", "Test Customer", "0771234567", "1 Test Road", "one@example.com", HASH));
-    s.put(
+    s.saveAccount(
         new EUK00361749_Customer(
             "200112345678",
             "Other Customer",
@@ -57,10 +57,10 @@ public final class EUK00361749_Tests {
             "2 Test Road",
             "two@example.com",
             HASH));
-    s.put(product("V1", EUK00361749_Category.VEGETABLES, "1000", 20));
-    s.put(product("F1", EUK00361749_Category.FRUITS, "2500", 20));
-    s.put(product("D1", EUK00361749_Category.DAIRY, "3000", 20));
-    s.put(product("H1", EUK00361749_Category.HOUSEHOLD_ESSENTIALS, "4000", 20));
+    s.saveProduct(product("V1", EUK00361749_Category.VEGETABLES, "1000", 20));
+    s.saveProduct(product("F1", EUK00361749_Category.FRUITS, "2500", 20));
+    s.saveProduct(product("D1", EUK00361749_Category.DAIRY, "3000", 20));
+    s.saveProduct(product("H1", EUK00361749_Category.HOUSEHOLD_ESSENTIALS, "4000", 20));
     return s;
   }
 
@@ -70,7 +70,7 @@ public final class EUK00361749_Tests {
 
   private static EUK00361749_Service fixture() throws Exception {
     Path p = path();
-    seed().save(p);
+    seed().saveToFile(p);
     EUK00361749_Service s = new EUK00361749_Service(p, CLOCK, new EUK00361749_CategoryPricing());
     customer(s);
     return s;
@@ -85,7 +85,7 @@ public final class EUK00361749_Tests {
   }
 
   private static EUK00361749_Order order(EUK00361749_Service s) throws IOException {
-    return s.place(Map.of("V1", 2), TOMORROW, EUK00361749_TimeSlot.MORNING_09_12);
+    return s.placeOrder(Map.of("V1", 2), TOMORROW, EUK00361749_TimeSlot.MORNING_09_12);
   }
 
   private static EUK00361749_Invoice price(EUK00361749_Category c, String amount) {
@@ -122,10 +122,10 @@ public final class EUK00361749_Tests {
         () -> {
           EUK00361749_Service s =
               new EUK00361749_Service(path(), CLOCK, new EUK00361749_CategoryPricing());
-          check(s.needsSetup());
-          s.setupAdmin("Admin", "new@example.com", PASSWORD);
-          check(!s.needsSetup());
-          rejects(() -> s.setupAdmin("Admin", "a@b.com", PASSWORD));
+          check(s.needsAdministratorSetup());
+          s.setupAdministrator("Admin", "new@example.com", PASSWORD);
+          check(!s.needsAdministratorSetup());
+          rejects(() -> s.setupAdministrator("Admin", "a@b.com", PASSWORD));
         });
     test(
         "Login success",
@@ -142,7 +142,7 @@ public final class EUK00361749_Tests {
         () -> {
           EUK00361749_Service s = fixture();
           rejects(() -> s.login("one@example.com", "incorrect passphrase".toCharArray()));
-          rejects(s::current);
+          rejects(s::getLoggedInAccount);
         });
     test(
         "Unknown email",
@@ -159,7 +159,7 @@ public final class EUK00361749_Tests {
         () -> {
           EUK00361749_Service s = fixture();
           s.logout();
-          rejects(() -> s.inventory(null));
+          rejects(() -> s.viewInventory(null));
         });
     test(
         "Role isolation",
@@ -184,9 +184,9 @@ public final class EUK00361749_Tests {
         "New customer can log in",
         () -> {
           EUK00361749_Service s = fixture();
-          s.register(
+          s.registerCustomer(
               "199912345678", "New User", "0771111111", "New Street", "new@example.com", PASSWORD);
-          check(s.login("new@example.com", PASSWORD).id().equals("199912345678"));
+          check(s.login("new@example.com", PASSWORD).getAccountId().equals("199912345678"));
         });
     test(
         "Duplicate NIC",
@@ -196,7 +196,7 @@ public final class EUK00361749_Tests {
           EUK00361749_Service s = fixture();
           rejects(
               () ->
-                  s.register(
+                  s.registerCustomer(
                       "200012345678",
                       "Duplicate",
                       "0771111111",
@@ -212,7 +212,7 @@ public final class EUK00361749_Tests {
           EUK00361749_Service s = fixture();
           rejects(
               () ->
-                  s.register(
+                  s.registerCustomer(
                       "199912345678",
                       "Duplicate",
                       "0771111111",
@@ -220,19 +220,19 @@ public final class EUK00361749_Tests {
                       "ONE@EXAMPLE.COM",
                       PASSWORD));
         });
-    test("Invalid NIC", "ABC", "Rejected", () -> rejects(() -> EUK00361749_Validation.nic("ABC")));
+    test("Invalid NIC", "ABC", "Rejected", () -> rejects(() -> EUK00361749_Validation.validateNic("ABC")));
     test(
         "Legacy NIC",
         "123456789v",
         "Normalized uppercase V",
-        () -> check(EUK00361749_Validation.nic("123456789v").equals("123456789V")));
+        () -> check(EUK00361749_Validation.validateNic("123456789v").equals("123456789V")));
     test(
         "Invalid contact",
         "Malformed email and phone",
         "Both rejected",
         () -> {
-          rejects(() -> EUK00361749_Validation.email("bad"));
-          rejects(() -> EUK00361749_Validation.phone("hello"));
+          rejects(() -> EUK00361749_Validation.validateEmail("bad"));
+          rejects(() -> EUK00361749_Validation.validatePhone("hello"));
         });
     test(
         "Password length",
@@ -262,8 +262,8 @@ public final class EUK00361749_Tests {
         () -> {
           EUK00361749_Service s = fixture();
           s.updateProfile("Updated", "0772222222", "New Address", "updated@example.com");
-          check(s.current().id().equals("200012345678"));
-          check(s.login("updated@example.com", PASSWORD).name().equals("Updated"));
+          check(s.getLoggedInAccount().getAccountId().equals("200012345678"));
+          check(s.login("updated@example.com", PASSWORD).getName().equals("Updated"));
         });
     test(
         "Profile email clash",
@@ -272,7 +272,7 @@ public final class EUK00361749_Tests {
         () -> {
           EUK00361749_Service s = fixture();
           rejects(() -> s.updateProfile("Changed", "0772222222", "Road", "two@example.com"));
-          check(s.current().email().equals("one@example.com"));
+          check(s.getLoggedInAccount().getEmail().equals("one@example.com"));
         });
     test(
         "Password change",
@@ -303,7 +303,7 @@ public final class EUK00361749_Tests {
           admin(s);
           s.addProduct(product("Z", EUK00361749_Category.FRUITS, "3000", 8));
           s.updateProduct(product("Z", EUK00361749_Category.FRUITS, "3500", 10));
-          money("3500", s.search("Z").get(0).price());
+          money("3500", s.searchProducts("Z").get(0).unitPrice());
         });
     test(
         "Duplicate product",
@@ -322,7 +322,7 @@ public final class EUK00361749_Tests {
           EUK00361749_Service s = fixture();
           admin(s);
           s.removeProduct("F1");
-          check(s.search("F1").isEmpty());
+          check(s.searchProducts("F1").isEmpty());
         });
     test(
         "Retain historical product",
@@ -367,8 +367,8 @@ public final class EUK00361749_Tests {
         "Only D1 returned",
         () -> {
           EUK00361749_Service s = fixture();
-          check(s.inventory(EUK00361749_Category.DAIRY).size() == 1);
-          check(s.inventory(EUK00361749_Category.DAIRY).get(0).id().equals("D1"));
+          check(s.viewInventory(EUK00361749_Category.DAIRY).size() == 1);
+          check(s.viewInventory(EUK00361749_Category.DAIRY).get(0).productId().equals("D1"));
         });
     test(
         "Search",
@@ -376,9 +376,9 @@ public final class EUK00361749_Tests {
         "Exact ID one; name four",
         () -> {
           EUK00361749_Service s = fixture();
-          check(s.search("v1").size() == 1);
-          check(s.search("dEmO").size() == 4);
-          check(s.search("absent").isEmpty());
+          check(s.searchProducts("v1").size() == 1);
+          check(s.searchProducts("dEmO").size() == 4);
+          check(s.searchProducts("absent").isEmpty());
         });
     test(
         "Empty order",
@@ -386,8 +386,8 @@ public final class EUK00361749_Tests {
         "Rejected; history empty",
         () -> {
           EUK00361749_Service s = fixture();
-          rejects(() -> s.place(Map.of(), TOMORROW, EUK00361749_TimeSlot.MORNING_09_12));
-          check(s.history().isEmpty());
+          rejects(() -> s.placeOrder(Map.of(), TOMORROW, EUK00361749_TimeSlot.MORNING_09_12));
+          check(s.viewOrderHistory().isEmpty());
         });
     test(
         "Bad quantity",
@@ -395,8 +395,8 @@ public final class EUK00361749_Tests {
         "Both rejected",
         () -> {
           EUK00361749_Service s = fixture();
-          rejects(() -> s.place(Map.of("V1", 0), TOMORROW, EUK00361749_TimeSlot.MORNING_09_12));
-          rejects(() -> s.place(Map.of("V1", -1), TOMORROW, EUK00361749_TimeSlot.MORNING_09_12));
+          rejects(() -> s.placeOrder(Map.of("V1", 0), TOMORROW, EUK00361749_TimeSlot.MORNING_09_12));
+          rejects(() -> s.placeOrder(Map.of("V1", -1), TOMORROW, EUK00361749_TimeSlot.MORNING_09_12));
         });
     test(
         "Unknown product",
@@ -405,7 +405,7 @@ public final class EUK00361749_Tests {
         () -> {
           EUK00361749_Service s = fixture();
           rejects(
-              () -> s.place(Map.of("MISSING", 2), TOMORROW, EUK00361749_TimeSlot.MORNING_09_12));
+              () -> s.placeOrder(Map.of("MISSING", 2), TOMORROW, EUK00361749_TimeSlot.MORNING_09_12));
         });
     test(
         "Duplicate normalized ID",
@@ -415,7 +415,7 @@ public final class EUK00361749_Tests {
           EUK00361749_Service s = fixture();
           rejects(
               () ->
-                  s.place(Map.of("V1", 2, "v1", 2), TOMORROW, EUK00361749_TimeSlot.MORNING_09_12));
+                  s.placeOrder(Map.of("V1", 2, "v1", 2), TOMORROW, EUK00361749_TimeSlot.MORNING_09_12));
         });
     test(
         "Same-day delivery",
@@ -425,7 +425,7 @@ public final class EUK00361749_Tests {
           EUK00361749_Service s = fixture();
           rejects(
               () ->
-                  s.place(
+                  s.placeOrder(
                       Map.of("V1", 2), TOMORROW.minusDays(1), EUK00361749_TimeSlot.MORNING_09_12));
         });
     test(
@@ -436,7 +436,7 @@ public final class EUK00361749_Tests {
           EUK00361749_Service s = fixture();
           rejects(
               () ->
-                  s.place(
+                  s.placeOrder(
                       Map.of("V1", 2), TOMORROW.minusDays(2), EUK00361749_TimeSlot.MORNING_09_12));
         });
     test(
@@ -445,7 +445,7 @@ public final class EUK00361749_Tests {
         "Local same-day rejected",
         () -> {
           Path p = path();
-          seed().save(p);
+          seed().saveToFile(p);
           EUK00361749_Service s =
               new EUK00361749_Service(
                   p,
@@ -461,7 +461,7 @@ public final class EUK00361749_Tests {
         () -> {
           EUK00361749_Service s = fixture();
           check(order(s).status() == EUK00361749_OrderStatus.PLACED);
-          check(s.search("V1").get(0).quantity() == 18);
+          check(s.searchProducts("V1").get(0).stockQuantity() == 18);
         });
     test(
         "Insufficient stock",
@@ -469,8 +469,8 @@ public final class EUK00361749_Tests {
         "Rejected; stock remains 20",
         () -> {
           EUK00361749_Service s = fixture();
-          rejects(() -> s.place(Map.of("V1", 21), TOMORROW, EUK00361749_TimeSlot.MORNING_09_12));
-          check(s.search("V1").get(0).quantity() == 20);
+          rejects(() -> s.placeOrder(Map.of("V1", 21), TOMORROW, EUK00361749_TimeSlot.MORNING_09_12));
+          check(s.searchProducts("V1").get(0).stockQuantity() == 20);
         });
     test(
         "Low stock excluded",
@@ -479,7 +479,7 @@ public final class EUK00361749_Tests {
         () -> {
           EUK00361749_Service s = fixture();
           admin(s);
-          s.setStock("V1", 5);
+          s.updateStockQuantity("V1", 5);
           customer(s);
           rejects(() -> order(s));
         });
@@ -490,7 +490,7 @@ public final class EUK00361749_Tests {
         () -> {
           EUK00361749_Service s = fixture();
           admin(s);
-          s.setStock("V1", 0);
+          s.updateStockQuantity("V1", 0);
           customer(s);
           rejects(() -> order(s));
         });
@@ -503,8 +503,8 @@ public final class EUK00361749_Tests {
           Map<String, Integer> b = new LinkedHashMap<>();
           b.put("V1", 2);
           b.put("F1", 99);
-          rejects(() -> s.place(b, TOMORROW, EUK00361749_TimeSlot.MORNING_09_12));
-          check(s.search("V1").get(0).quantity() == 20 && s.history().isEmpty());
+          rejects(() -> s.placeOrder(b, TOMORROW, EUK00361749_TimeSlot.MORNING_09_12));
+          check(s.searchProducts("V1").get(0).stockQuantity() == 20 && s.viewOrderHistory().isEmpty());
         });
     test(
         "Vegetable minimum",
@@ -512,7 +512,7 @@ public final class EUK00361749_Tests {
         "Reject below; payable 2400",
         () -> {
           rejects(() -> price(EUK00361749_Category.VEGETABLES, "1999.99"));
-          money("2400", price(EUK00361749_Category.VEGETABLES, "2000").payable());
+          money("2400", price(EUK00361749_Category.VEGETABLES, "2000").finalPayable());
         });
     test(
         "Fruit minimum",
@@ -520,7 +520,7 @@ public final class EUK00361749_Tests {
         "Reject below; payable 2975",
         () -> {
           rejects(() -> price(EUK00361749_Category.FRUITS, "2499.99"));
-          money("2975", price(EUK00361749_Category.FRUITS, "2500").payable());
+          money("2975", price(EUK00361749_Category.FRUITS, "2500").finalPayable());
         });
     test(
         "Dairy minimum",
@@ -528,7 +528,7 @@ public final class EUK00361749_Tests {
         "Reject below; payable 3640",
         () -> {
           rejects(() -> price(EUK00361749_Category.DAIRY, "2999.99"));
-          money("3640", price(EUK00361749_Category.DAIRY, "3000").payable());
+          money("3640", price(EUK00361749_Category.DAIRY, "3000").finalPayable());
         });
     test(
         "Household minimum",
@@ -536,7 +536,7 @@ public final class EUK00361749_Tests {
         "Reject below; payable 4900",
         () -> {
           rejects(() -> price(EUK00361749_Category.HOUSEHOLD_ESSENTIALS, "3999.99"));
-          money("4900", price(EUK00361749_Category.HOUSEHOLD_ESSENTIALS, "4000").payable());
+          money("4900", price(EUK00361749_Category.HOUSEHOLD_ESSENTIALS, "4000").finalPayable());
         });
     test(
         "Exact discount threshold",
@@ -545,7 +545,7 @@ public final class EUK00361749_Tests {
         () -> {
           EUK00361749_Invoice i = price(EUK00361749_Category.VEGETABLES, "10000");
           money("0", i.discount());
-          money("10800", i.payable());
+          money("10800", i.finalPayable());
         });
     test(
         "Above discount threshold",
@@ -554,7 +554,7 @@ public final class EUK00361749_Tests {
         () -> {
           EUK00361749_Invoice i = price(EUK00361749_Category.VEGETABLES, "10000.01");
           money("500", i.discount());
-          money("10275.01", i.payable());
+          money("10275.01", i.finalPayable());
         });
     test(
         "Mixed category billing",
@@ -578,9 +578,9 @@ public final class EUK00361749_Tests {
                               new BigDecimal("6000"),
                               1)));
           money("900", i.discount());
-          money("500", i.delivery());
+          money("500", i.deliveryFee());
           money("825", i.tax());
-          money("12425", i.payable());
+          money("12425", i.finalPayable());
         });
     test(
         "Mixed minimum",
@@ -612,7 +612,7 @@ public final class EUK00361749_Tests {
           EUK00361749_Invoice i = price(EUK00361749_Category.DAIRY, "12000");
           money("960", i.discount());
           money("883.20", i.tax());
-          money("12323.20", i.payable());
+          money("12323.20", i.finalPayable());
         });
     test(
         "Rounding",
@@ -626,9 +626,9 @@ public final class EUK00361749_Tests {
         () -> {
           EUK00361749_Service s = fixture();
           EUK00361749_Order o = order(s);
-          s.cancel(o.id());
-          check(s.search("V1").get(0).quantity() == 20);
-          check(s.invoice(o.id()).contains("AMOUNT DUE: LKR 0.00"));
+          s.cancelOrder(o.orderId());
+          check(s.searchProducts("V1").get(0).stockQuantity() == 20);
+          check(s.generateInvoice(o.orderId()).contains("LKR 0.00 (cancelled)"));
         });
     test(
         "Double cancellation",
@@ -637,9 +637,9 @@ public final class EUK00361749_Tests {
         () -> {
           EUK00361749_Service s = fixture();
           EUK00361749_Order o = order(s);
-          s.cancel(o.id());
-          rejects(() -> s.cancel(o.id()));
-          check(s.search("V1").get(0).quantity() == 20);
+          s.cancelOrder(o.orderId());
+          rejects(() -> s.cancelOrder(o.orderId()));
+          check(s.searchProducts("V1").get(0).stockQuantity() == 20);
         });
     test(
         "Cancel preparing",
@@ -649,10 +649,10 @@ public final class EUK00361749_Tests {
           EUK00361749_Service s = fixture();
           EUK00361749_Order o = order(s);
           admin(s);
-          s.advance(o.id());
+          s.advanceOrderStatus(o.orderId());
           customer(s);
-          s.cancel(o.id());
-          check(s.search("V1").get(0).quantity() == 20);
+          s.cancelOrder(o.orderId());
+          check(s.searchProducts("V1").get(0).stockQuantity() == 20);
         });
     test(
         "Cancellation cutoff",
@@ -662,11 +662,11 @@ public final class EUK00361749_Tests {
           EUK00361749_Service s = fixture();
           EUK00361749_Order o = order(s);
           admin(s);
-          s.advance(o.id());
-          s.advance(o.id());
+          s.advanceOrderStatus(o.orderId());
+          s.advanceOrderStatus(o.orderId());
           customer(s);
-          rejects(() -> s.cancel(o.id()));
-          check(s.search("V1").get(0).quantity() == 18);
+          rejects(() -> s.cancelOrder(o.orderId()));
+          check(s.searchProducts("V1").get(0).stockQuantity() == 18);
         });
     test(
         "Delivery terminal state",
@@ -676,11 +676,11 @@ public final class EUK00361749_Tests {
           EUK00361749_Service s = fixture();
           EUK00361749_Order o = order(s);
           admin(s);
-          s.advance(o.id());
-          s.advance(o.id());
-          s.advance(o.id());
-          check(s.history().get(0).status() == EUK00361749_OrderStatus.DELIVERED);
-          rejects(() -> s.advance(o.id()));
+          s.advanceOrderStatus(o.orderId());
+          s.advanceOrderStatus(o.orderId());
+          s.advanceOrderStatus(o.orderId());
+          check(s.viewOrderHistory().get(0).status() == EUK00361749_OrderStatus.DELIVERED);
+          rejects(() -> s.advanceOrderStatus(o.orderId()));
         });
     test(
         "Customer status control",
@@ -689,7 +689,7 @@ public final class EUK00361749_Tests {
         () -> {
           EUK00361749_Service s = fixture();
           EUK00361749_Order o = order(s);
-          rejects(() -> s.advance(o.id()));
+          rejects(() -> s.advanceOrderStatus(o.orderId()));
         });
     test(
         "Order ownership",
@@ -699,9 +699,9 @@ public final class EUK00361749_Tests {
           EUK00361749_Service s = fixture();
           EUK00361749_Order o = order(s);
           s.login("two@example.com", PASSWORD);
-          check(s.history().isEmpty());
-          rejects(() -> s.invoice(o.id()));
-          rejects(() -> s.cancel(o.id()));
+          check(s.viewOrderHistory().isEmpty());
+          rejects(() -> s.generateInvoice(o.orderId()));
+          rejects(() -> s.cancelOrder(o.orderId()));
         });
     test(
         "Historical snapshots",
@@ -710,11 +710,11 @@ public final class EUK00361749_Tests {
         () -> {
           EUK00361749_Service s = fixture();
           EUK00361749_Order o = order(s);
-          String old = s.invoice(o.id());
+          String old = s.generateInvoice(o.orderId());
           s.updateProfile("New Name", "0771111111", "Changed", "one@example.com");
           admin(s);
           s.updateProduct(product("V1", EUK00361749_Category.VEGETABLES, "9999", 18));
-          check(s.invoice(o.id()).equals(old));
+          check(s.generateInvoice(o.orderId()).equals(old));
         });
     test(
         "Persistent restart",
@@ -722,7 +722,7 @@ public final class EUK00361749_Tests {
         "Login; same order and stock",
         () -> {
           Path p = path();
-          seed().save(p);
+          seed().saveToFile(p);
           EUK00361749_Service s =
               new EUK00361749_Service(p, CLOCK, new EUK00361749_CategoryPricing());
           customer(s);
@@ -730,8 +730,8 @@ public final class EUK00361749_Tests {
           EUK00361749_Service reopened =
               new EUK00361749_Service(p, CLOCK, new EUK00361749_CategoryPricing());
           customer(reopened);
-          check(reopened.history().get(0).id().equals(o.id()));
-          check(reopened.search("V1").get(0).quantity() == 18);
+          check(reopened.viewOrderHistory().get(0).orderId().equals(o.orderId()));
+          check(reopened.searchProducts("V1").get(0).stockQuantity() == 18);
         });
     test(
         "No plaintext password",
@@ -739,7 +739,7 @@ public final class EUK00361749_Tests {
         "Plaintext absent; PBKDF2 record present",
         () -> {
           Path p = path();
-          seed().save(p);
+          seed().saveToFile(p);
           String decoded =
               Files.readAllLines(p).stream()
                   .skip(1)
@@ -751,7 +751,7 @@ public final class EUK00361749_Tests {
                               java.nio.charset.StandardCharsets.UTF_8))
                   .reduce("", (a, b) -> a + "\n" + b);
           check(!decoded.contains(new String(PASSWORD)));
-          check(decoded.contains("600000:"));
+          check(decoded.contains(EUK00361749_Password.ITERATIONS + ":"));
         });
     test(
         "Corrupt file",
@@ -760,7 +760,7 @@ public final class EUK00361749_Tests {
         () -> {
           Path p = path();
           Files.writeString(p, "damaged");
-          rejects(() -> EUK00361749_Store.load(p));
+          rejects(() -> EUK00361749_Store.loadFromFile(p));
           check(Files.readString(p).equals("damaged"));
         });
     test(
@@ -769,7 +769,7 @@ public final class EUK00361749_Tests {
         "Order rejected; memory stock/history unchanged",
         () -> {
           Path p = path();
-          seed().save(p);
+          seed().saveToFile(p);
           EUK00361749_Service s =
               new EUK00361749_Service(p, CLOCK, new EUK00361749_CategoryPricing());
           customer(s);
@@ -777,8 +777,8 @@ public final class EUK00361749_Tests {
           Files.createDirectory(p);
           Files.writeString(p.resolve("block"), "keep");
           rejects(() -> order(s));
-          check(s.history().isEmpty());
-          check(s.search("V1").get(0).quantity() == 20);
+          check(s.viewOrderHistory().isEmpty());
+          check(s.searchProducts("V1").get(0).stockQuantity() == 20);
         });
     test(
         "Immutable snapshots",
@@ -788,7 +788,7 @@ public final class EUK00361749_Tests {
           EUK00361749_Service s = fixture();
           EUK00361749_Order o = order(s);
           try {
-            s.inventory(null).clear();
+            s.viewInventory(null).clear();
             throw new AssertionError();
           } catch (UnsupportedOperationException expected) {
           }
@@ -797,6 +797,101 @@ public final class EUK00361749_Tests {
             throw new AssertionError();
           } catch (UnsupportedOperationException expected) {
           }
+        });
+    test(
+        "Sequential order IDs",
+        "Two orders",
+        "ORD0001 then ORD0002",
+        () -> {
+          EUK00361749_Service s = fixture();
+          String first = order(s).orderId();
+          String second = order(s).orderId();
+          check(first.equals("ORD0001") && second.equals("ORD0002"));
+        });
+    test(
+        "Observer notifications",
+        "Place order, admin advances it",
+        "Customer receives 2 messages",
+        () -> {
+          EUK00361749_Service s = fixture();
+          EUK00361749_CustomerNotifier notifier = new EUK00361749_CustomerNotifier();
+          s.addOrderObserver(notifier);
+          EUK00361749_Order o = order(s);
+          admin(s);
+          s.advanceOrderStatus(o.orderId());
+          List<String> messages = notifier.collectMessages("200012345678");
+          check(messages.size() == 2 && messages.get(1).contains("Preparing"));
+          check(notifier.countMessages("200012345678") == 0);
+        });
+    test(
+        "Order builder",
+        "Builder with no lines",
+        "Rejected",
+        () -> {
+          EUK00361749_Customer c =
+              new EUK00361749_Customer(
+                  "200012345678", "Builder Test", "0771234567", "Road", "b@example.com", HASH);
+          rejects(
+              () ->
+                  new EUK00361749_Order.EUK00361749_OrderBuilder("ORD0009", c)
+                      .deliverOn(TOMORROW, EUK00361749_TimeSlot.EVENING_16_20)
+                      .build());
+        });
+    test(
+        "Merge sort inventory",
+        "Products added in mixed order",
+        "Sorted by category then name",
+        () -> {
+          check(EUK00361749_Sorter.mergeSort(List.of(5, 3, 9, 1, 3), Comparator.<Integer>naturalOrder())
+              .equals(List.of(1, 3, 3, 5, 9)));
+          EUK00361749_Service s = fixture();
+          List<EUK00361749_Product> all = s.viewInventory(null);
+          check(all.get(0).category() == EUK00361749_Category.VEGETABLES);
+          check(all.get(3).category() == EUK00361749_Category.HOUSEHOLD_ESSENTIALS);
+        });
+    test(
+        "Manual stock status",
+        "Admin marks V1 Out of Stock (qty 20)",
+        "Order rejected; quantity unchanged",
+        () -> {
+          EUK00361749_Service s = fixture();
+          admin(s);
+          s.updateStockStatus("V1", EUK00361749_StockStatus.OUT_OF_STOCK);
+          check(s.searchProducts("V1").get(0).stockQuantity() == 20);
+          customer(s);
+          rejects(() -> order(s));
+        });
+    test(
+        "Contradictory status",
+        "In Stock with quantity 0",
+        "Rejected",
+        () -> {
+          EUK00361749_Service s = fixture();
+          admin(s);
+          s.updateStockQuantity("V1", 0);
+          rejects(() -> s.updateStockStatus("V1", EUK00361749_StockStatus.IN_STOCK));
+        });
+    test(
+        "Order quote",
+        "Quote V1 x2 without placing",
+        "Payable 2400; stock still 20",
+        () -> {
+          EUK00361749_Service s = fixture();
+          money("2400", s.quoteOrder(Map.of("V1", 2)).finalPayable());
+          check(s.searchProducts("V1").get(0).stockQuantity() == 20 && s.viewOrderHistory().isEmpty());
+        });
+    test(
+        "Polymorphic account roles",
+        "Admin and Customer as Account",
+        "Different menu titles",
+        () -> {
+          List<EUK00361749_Account> accounts =
+              List.of(
+                  new EUK00361749_Admin("Boss", "boss@example.com", HASH),
+                  new EUK00361749_Customer(
+                      "200012345678", "Cust", "0771234567", "Road", "c@example.com", HASH));
+          check(accounts.get(0).getMenuTitle().startsWith("ADMINISTRATOR"));
+          check(accounts.get(1).getMenuTitle().startsWith("CUSTOMER"));
         });
     System.out.println("RESULT: " + passed + " passed; " + failed + " failed.");
     if (failed > 0) System.exit(1);

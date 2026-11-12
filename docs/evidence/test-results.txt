@@ -1,4 +1,4 @@
-FreshMart regression execution | Java 21.0.13 | 2026-11-10T09:54:57.331364286Z
+﻿FreshMart regression execution | Java 21.0.12.1 | 2026-11-12T09:22:08.518009200Z
 ID | Function | Input | Expected and verified outcome | Result
 T01 | First-run setup | New file; create admin twice | First succeeds; duplicate rejected | PASS
 T02 | Login success | Uppercase customer email | Customer authenticated | PASS
@@ -63,4 +63,12 @@ T60 | No plaintext password | Save credentials and inspect decoded fields | Plai
 T61 | Corrupt file | Invalid header | Load rejected; bytes unchanged | PASS
 T62 | Save failure rollback | Replace database with nonempty directory | Order rejected; memory stock/history unchanged | PASS
 T63 | Immutable snapshots | Modify returned inventory and order lines | Both unmodifiable | PASS
-RESULT: 63 passed; 0 failed.
+T64 | Sequential order IDs | Two orders | ORD0001 then ORD0002 | PASS
+T65 | Observer notifications | Place order, admin advances it | Customer receives 2 messages | PASS
+T66 | Order builder | Builder with no lines | Rejected | PASS
+T67 | Merge sort inventory | Products added in mixed order | Sorted by category then name | PASS
+T68 | Manual stock status | Admin marks V1 Out of Stock (qty 20) | Order rejected; quantity unchanged | PASS
+T69 | Contradictory status | In Stock with quantity 0 | Rejected | PASS
+T70 | Order quote | Quote V1 x2 without placing | Payable 2400; stock still 20 | PASS
+T71 | Polymorphic account roles | Admin and Customer as Account | Different menu titles | PASS
+RESULT: 71 passed; 0 failed.
