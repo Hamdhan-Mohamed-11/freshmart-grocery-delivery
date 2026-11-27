@@ -26,6 +26,9 @@ import java.util.Scanner;
  * {@link EUK00361749_Service}. Usability features: numbered vertical menus, inputs re-asked when
  * invalid, a price preview before an order is placed, short order IDs (ORD0001), hidden password
  * entry in a real terminal, and order-status notifications (Observer pattern).
+ *
+ * <p>Two observers are registered with the service: the customer notifier (in-app inbox) and the
+ * order activity log shown to the administrator.
  */
 public final class EUK00361749_Main {
 
@@ -33,14 +36,17 @@ public final class EUK00361749_Main {
 
     private final EUK00361749_Service service;
     private final EUK00361749_CustomerNotifier notifier = new EUK00361749_CustomerNotifier();
+    private final EUK00361749_OrderActivityLog activityLog;
     private final Console console = System.console();
     private final Scanner scanner = new Scanner(System.in);
     private final Path invoiceFolder;
 
-    private EUK00361749_Main(EUK00361749_Service service, Path invoiceFolder) {
+    private EUK00361749_Main(EUK00361749_Service service, Path invoiceFolder, Clock clock) {
         this.service = service;
         this.invoiceFolder = invoiceFolder;
-        service.addOrderObserver(notifier);
+        this.activityLog = new EUK00361749_OrderActivityLog(clock);
+        service.addOrderObserver(notifier);     // observer 1: customer inbox
+        service.addOrderObserver(activityLog);  // observer 2: administrator activity log
     }
 
     // =====================================================================
@@ -66,7 +72,7 @@ public final class EUK00361749_Main {
                 } else {
                     customerMenu(account);
                 }
-            } catch (IllegalArgumentException ex) {
+            } catch (IllegalArgumentException | IllegalStateException ex) {
                 System.out.println("Error: " + ex.getMessage());
             } catch (IOException ex) {
                 System.out.println("Storage error: " + ex.getMessage() + " The change was not saved.");
@@ -102,18 +108,13 @@ public final class EUK00361749_Main {
         System.out.println("  8. View all orders");
         System.out.println("  9. Advance an order's delivery status");
         System.out.println(" 10. View invoice");
+        System.out.println(" 11. View order activity log");
         System.out.println("  0. Log out");
-        switch (readInt("Choose an option", 0, 10)) {
+        switch (readInt("Choose an option", 0, 11)) {
             case 1 -> browseInventory();
             case 2 -> printProducts(service.searchProducts(readText("Product name or ID")));
-            case 3 -> {
-                service.addProduct(readProductDetails());
-                System.out.println("Product added.");
-            }
-            case 4 -> {
-                service.updateProduct(readProductDetails());
-                System.out.println("Product updated.");
-            }
+            case 3 -> addProduct();
+            case 4 -> updateProduct();
             case 5 -> {
                 String productId = readText("Product ID");
                 service.updateStockQuantity(productId, readInt("New stock quantity", 0, 1_000_000));
@@ -130,10 +131,11 @@ public final class EUK00361749_Main {
                 String orderId = readText("Order ID");
                 if (confirm("Move order " + orderId.toUpperCase() + " to its next delivery status?")) {
                     EUK00361749_Order order = service.advanceOrderStatus(orderId);
-                    System.out.println("Order " + order.orderId() + " is now " + order.status() + ".");
+                    System.out.println("Order " + order.orderId() + " is now " + order.state() + ".");
                 }
             }
             case 10 -> viewInvoice();
+            case 11 -> showActivityLog();
             default -> logout();
         }
     }
@@ -235,6 +237,15 @@ public final class EUK00361749_Main {
         }
     }
 
+    private void showActivityLog() {
+        List<String> entries = activityLog.getEntries();
+        if (entries.isEmpty()) {
+            System.out.println("No order activity in this session.");
+        } else {
+            entries.forEach(entry -> System.out.println("  " + entry));
+        }
+    }
+
     private void showNotifications(EUK00361749_Account customer) {
         List<String> messages = notifier.collectMessages(customer.getAccountId());
         if (messages.isEmpty()) {
@@ -258,8 +269,28 @@ public final class EUK00361749_Main {
         printProducts(service.viewInventory(choice == 0 ? null : categories[choice - 1]));
     }
 
-    private EUK00361749_Product readProductDetails() {
+    /** The ID is checked first, so the administrator is not asked for details that cannot be saved. */
+    private void addProduct() throws IOException {
         String productId = readText("Product ID (e.g. V001)");
+        if (service.productExists(productId)) {
+            System.out.println("Error: Product " + productId.toUpperCase() + " already exists. Use option 4 to update it.");
+            return;
+        }
+        service.addProduct(readProductDetails(productId));
+        System.out.println("Product added.");
+    }
+
+    private void updateProduct() throws IOException {
+        String productId = readText("Product ID");
+        if (!service.productExists(productId)) {
+            System.out.println("Error: Product " + productId.toUpperCase() + " not found.");
+            return;
+        }
+        service.updateProduct(readProductDetails(productId));
+        System.out.println("Product updated.");
+    }
+
+    private EUK00361749_Product readProductDetails(String productId) {
         String name = readText("Product name");
         EUK00361749_Category category = chooseOption("Category", EUK00361749_Category.values());
         BigDecimal unitPrice = readMoney("Unit price (LKR)");
@@ -285,12 +316,19 @@ public final class EUK00361749_Main {
             if (productId.isEmpty()) {
                 break;
             }
-            String normalisedId = productId.toUpperCase();
-            if (basket.containsKey(normalisedId)) {
-                System.out.println("  " + normalisedId + " is already in the basket.");
+            EUK00361749_Product product;
+            try {
+                product = service.findOrderableProduct(productId);
+            } catch (IllegalArgumentException ex) {
+                System.out.println("  " + ex.getMessage());
                 continue;
             }
-            basket.put(normalisedId, readInt("Quantity", 1, 1000));
+            if (basket.containsKey(product.productId())) {
+                System.out.println("  " + product.productId() + " is already in the basket.");
+                continue;
+            }
+            // The upper limit shows the customer how many units are available.
+            basket.put(product.productId(), readInt("Quantity", 1, Math.min(1000, product.stockQuantity())));
         }
         if (basket.isEmpty()) {
             System.out.println("The basket is empty; no order was placed.");
@@ -299,8 +337,9 @@ public final class EUK00361749_Main {
         LocalDate deliveryDate = readDate("Delivery date (tomorrow or later)");
         EUK00361749_TimeSlot timeSlot = chooseOption("Delivery time slot", EUK00361749_TimeSlot.values());
 
+        EUK00361749_Invoice preview = service.quoteOrder(basket, deliveryDate, timeSlot); // validates first
         System.out.println("\nORDER PREVIEW - delivery " + deliveryDate + ", " + timeSlot);
-        System.out.println(service.quoteOrder(basket));
+        System.out.println(preview);
         if (!confirm("Place this order?")) {
             System.out.println("Order not placed; stock is unchanged.");
             return;
@@ -476,9 +515,10 @@ public final class EUK00361749_Main {
                     System.err.println("FreshMart is already running with this data file.");
                     return;
                 }
-                EUK00361749_Service service = new EUK00361749_Service(dataFile,
-                        Clock.system(EUK00361749_Service.STORE_ZONE), new EUK00361749_CategoryPricing());
-                new EUK00361749_Main(service, dataFile.getParent().resolve("invoices")).run();
+                Clock clock = Clock.system(EUK00361749_Service.STORE_ZONE);
+                EUK00361749_Service service = new EUK00361749_Service(dataFile, clock,
+                        EUK00361749_PricingCatalogue.standard());
+                new EUK00361749_Main(service, dataFile.getParent().resolve("invoices"), clock).run();
             }
         } catch (NoSuchElementException ex) {
             System.out.println("\nInput ended. All saved records are kept.");

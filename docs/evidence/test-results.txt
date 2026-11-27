@@ -1,74 +1,101 @@
-﻿FreshMart regression execution | Java 21.0.12.1 | 2026-11-12T10:00:15.036106400Z
-ID | Function | Input | Expected and verified outcome | Result
-T01 | First-run setup | New file; create admin twice | First succeeds; duplicate rejected | PASS
-T02 | Login success | Uppercase customer email | Customer authenticated | PASS
-T03 | Wrong password | Incorrect password | Rejected and previous session cleared | PASS
-T04 | Unknown email | unknown@example.com | Rejected | PASS
-T05 | Guest access | Logout then browse | Rejected | PASS
-T06 | Role isolation | Customer adds product | Rejected | PASS
-T07 | Admin order restriction | Admin places order | Rejected | PASS
-T08 | Register account | New NIC and email | New customer can log in | PASS
-T09 | Duplicate NIC | Existing NIC | Rejected | PASS
-T10 | Duplicate email | Existing email in uppercase | Rejected | PASS
-T11 | Invalid NIC | ABC | Rejected | PASS
-T12 | Legacy NIC | 123456789v | Normalized uppercase V | PASS
-T13 | Invalid contact | Malformed email and phone | Both rejected | PASS
-T14 | Password length | Short password | Rejected | PASS
-T15 | Salt uniqueness | Hash same password twice | Different hashes; both verify | PASS
-T16 | Malformed hash | Colon only | False without crash | PASS
-T17 | Profile update | New email and address | Same NIC; new details used | PASS
-T18 | Profile email clash | Other customer email | Rejected; original unchanged | PASS
-T19 | Password change | Correct current and new password | Old rejected; new works | PASS
-T20 | Password change denied | Wrong current password | Rejected; old still valid | PASS
-T21 | Add and update product | New Z then price 3500 | New value returned | PASS
-T22 | Duplicate product | Existing V1 | Rejected | PASS
-T23 | Remove unused product | F1 without history | Removed | PASS
-T24 | Retain historical product | V1 after order | Removal rejected | PASS
-T25 | Product validation | Negative price or stock; 3 decimals | All rejected | PASS
-T26 | Stock boundaries | Quantities 0 1 5 6 | Out Low Low In | PASS
-T27 | Category inventory | DAIRY filter | Only D1 returned | PASS
-T28 | Search | v1 and case-insensitive Demo | Exact ID one; name four | PASS
-T29 | Empty order | Empty basket | Rejected; history empty | PASS
-T30 | Bad quantity | Zero and negative | Both rejected | PASS
-T31 | Unknown product | MISSING | Rejected | PASS
-T32 | Duplicate normalized ID | V1 and v1 | Rejected | PASS
-T33 | Same-day delivery | 2026-11-10 | Rejected | PASS
-T34 | Past delivery | 2026-11-09 | Rejected | PASS
-T35 | Colombo date boundary | UTC 20:00 is next day in Colombo | Local same-day rejected | PASS
-T36 | Tomorrow delivery | Valid V1 x2 | Placed; stock becomes 18 | PASS
-T37 | Insufficient stock | V1 x21 when 20 | Rejected; stock remains 20 | PASS
-T38 | Low stock excluded | Stock 5 then request 2 | Rejected | PASS
-T39 | Out of stock excluded | Stock 0 | Rejected | PASS
-T40 | Basket all or nothing | V1 valid plus F1 x99 | No stock or history change | PASS
-T41 | Vegetable minimum | 1999.99 then 2000 | Reject below; payable 2400 | PASS
-T42 | Fruit minimum | 2499.99 then 2500 | Reject below; payable 2975 | PASS
-T43 | Dairy minimum | 2999.99 then 3000 | Reject below; payable 3640 | PASS
-T44 | Household minimum | 3999.99 then 4000 | Reject below; payable 4900 | PASS
-T45 | Exact discount threshold | Vegetables 10000 | Discount 0; total 10800 | PASS
-T46 | Above discount threshold | Vegetables 10000.01 | Discount 500; total 10275.01 | PASS
-T47 | Mixed category billing | Vegetables 6000; household 6000 | Discount 900; delivery 500; tax 825; total 12425 | PASS
-T48 | Mixed minimum | Vegetables 2000 plus household 1000 | Rejected below highest minimum 4000 | PASS
-T49 | Dairy discount | 12000 | Discount 960; tax 883.20; total 12323.20 | PASS
-T50 | Rounding | Vegetables 2000.10 | Tax 100.01 half up | PASS
-T51 | Cancel placed | V1 x2 then cancel | Stock restored to 20; cancelled due zero | PASS
-T52 | Double cancellation | Cancel same order twice | Second rejected; stock stays 20 | PASS
-T53 | Cancel preparing | Advance once then cancel | Allowed; stock restored | PASS
-T54 | Cancellation cutoff | Advance twice then cancel | Rejected at Out for Delivery | PASS
-T55 | Delivery terminal state | Advance three times then once more | Delivered; further advance rejected | PASS
-T56 | Customer status control | Customer attempts advance | Rejected | PASS
-T57 | Order ownership | Second customer views/cancels first order | History empty; invoice/cancel rejected | PASS
-T58 | Historical snapshots | Change profile and product price after order | Original customer and price retained | PASS
-T59 | Persistent restart | Order then reopen data file | Login; same order and stock | PASS
-T60 | No plaintext password | Save credentials and inspect decoded fields | Plaintext absent; PBKDF2 record present | PASS
-T61 | Corrupt file | Invalid header | Load rejected; bytes unchanged | PASS
-T62 | Save failure rollback | Replace database with nonempty directory | Order rejected; memory stock/history unchanged | PASS
-T63 | Immutable snapshots | Modify returned inventory and order lines | Both unmodifiable | PASS
-T64 | Sequential order IDs | Two orders | ORD0001 then ORD0002 | PASS
-T65 | Observer notifications | Place order, admin advances it | Customer receives 2 messages | PASS
-T66 | Order builder | Builder with no lines | Rejected | PASS
-T67 | Merge sort inventory | Products added in mixed order | Sorted by category then name | PASS
-T68 | Manual stock status | Admin marks V1 Out of Stock (qty 20) | Order rejected; quantity unchanged | PASS
-T69 | Contradictory status | In Stock with quantity 0 | Rejected | PASS
-T70 | Order quote | Quote V1 x2 without placing | Payable 2400; stock still 20 | PASS
-T71 | Polymorphic account roles | Admin and Customer as Account | Different menu titles | PASS
-RESULT: 71 passed; 0 failed.
+﻿FreshMart test execution | Java 21.0.12.1 | fixed clock 2026-11-10 Asia/Colombo
+ID | Area | Type | Scenario | Input | Expected result | Actual result | Status
+TC01 | 2.1 Products | Normal | First-run administrator setup | Empty data file; create administrator twice | First accepted; second rejected | Created; second Rejected: The administrator account already exists. | PASS
+TC02 | 2.1 Products | Normal | Add then update a product | Add Z1 Fruits LKR 3,000; update price to 3,500 | Z1 stored with price 3500.00 | Z1 price 3500.00 | PASS
+TC03 | 2.1 Products | Invalid | Duplicate product ID | Add V1 again | Rejected | Rejected: Product V1 already exists. | PASS
+TC04 | 2.1 Products | Invalid | Update unknown product | Update Q9 | Rejected: not found | Rejected: Product Q9 not found. | PASS
+TC05 | 2.1 Products | Normal | Remove product without orders | Remove F1 | F1 no longer found | F1 removed; search returns 0 results | PASS
+TC06 | 2.1 Products | Invalid | Remove product used in an order | Order V1, then remove V1 | Rejected so old invoices stay valid | Rejected: Product has order history; set its stock to 0 instead. | PASS
+TC07 | 2.1 Products | Invalid | Product field validation | Price -1; stock -1; price 1.001; blank name | All four rejected | All four rejected | PASS
+TC08 | 2.1 Products | Boundary | Unit price limits | 0.01 and 1,000,000.00; then 1,000,000.01 | Limits accepted; above maximum rejected | 0.01 and 1,000,000.00 accepted; Rejected: Unit price must be above 0, at most LKR 1,000,000, with up to 2 decimals. | PASS
+TC09 | 2.1 Products | Boundary | Automatic stock status | Quantities 0, 1, 5, 6 | Out of Stock, Low Stock, Low Stock, In Stock | Out of Stock, Low Stock, Low Stock, In Stock | PASS
+TC10 | 2.1 Products | Normal | Update stock quantity | Set V1 quantity from 20 to 3 | Quantity 3; status Low Stock | Quantity 3; Low Stock | PASS
+TC11 | 2.1 Products | Normal | Set stock status manually | Mark V1 Out of Stock (quantity 20); customer orders V1 | Quantity unchanged; order rejected | Quantity 20; Rejected: V1 is Out of Stock; only In Stock products can be ordered. | PASS
+TC12 | 2.1 Products | Invalid | Contradictory stock status | V1 quantity 0, then set In Stock | Rejected | Rejected: A product with zero stock must be Out of Stock. | PASS
+TC13 | 2.1 Products | Normal | View inventory by category | Category Dairy | Only D1 listed | 1 product: D1 | PASS
+TC14 | 2.1 Products | Normal | Full inventory order (merge sort) | All categories; products added out of order | Sorted by category, then name | Order [V2, V1, F1, D1, H1] | PASS
+TC15 | 2.1 Products | Invalid | Customer uses an administrator function | Customer adds a product | Rejected | Rejected: Only the administrator can do this. | PASS
+TC16 | 2.2 Accounts | Normal | Register a customer | New NIC, name, phone, address, email, password | Account created; can log in | Logged in as NIC 199912345678 | PASS
+TC17 | 2.2 Accounts | Invalid | Duplicate NIC | Register NIC 200012345678 again | Rejected | Rejected: This NIC is already registered. | PASS
+TC18 | 2.2 Accounts | Invalid | Duplicate email | ONE@EXAMPLE.COM (upper case) | Rejected | Rejected: This email is already registered. | PASS
+TC19 | 2.2 Accounts | Invalid | Registration before setup | Register on an empty system | Rejected | Rejected: The administrator must be set up first. | PASS
+TC20 | 2.2 Accounts | Invalid | Invalid NIC | ABC | Rejected | Rejected: NIC must be 9 digits followed by V/X, or 12 digits. | PASS
+TC21 | 2.2 Accounts | Boundary | NIC formats | 123456789v (old) and 200012345678 (new) | Both accepted; old format upper-cased | 123456789V and 200012345678 | PASS
+TC22 | 2.2 Accounts | Invalid | Invalid email and phone | "bad" and "hello" | Both rejected | Rejected: Enter a valid email address, e.g. name@example.com. | Rejected: Contact number must be 7-15 digits (optional leading +). | PASS
+TC23 | 2.2 Accounts | Boundary | Password length | 7 characters, then 8 characters | 7 rejected; 8 accepted | Rejected: Password must contain 8-128 characters. | 8 accepted | PASS
+TC24 | 2.2 Accounts | Normal | Login with any email case | ONE@EXAMPLE.COM | Customer logged in | Logged in: Test Customer | PASS
+TC25 | 2.2 Accounts | Invalid | Wrong password | Correct email, wrong password | Rejected; nobody logged in | Rejected: Incorrect email or password.; session cleared | PASS
+TC26 | 2.2 Accounts | Invalid | Unknown email | unknown@example.com | Rejected | Rejected: Incorrect email or password. | PASS
+TC27 | 2.2 Accounts | Normal | Edit profile | New name, phone, address and email | Details changed; NIC unchanged | Updated Name, NIC 200012345678 | PASS
+TC28 | 2.2 Accounts | Invalid | Profile email already used | two@example.com | Rejected; original email kept | Rejected: This email is already registered. | PASS
+TC29 | 2.2 Accounts | Normal | Change password | Correct current password + new password | Old password refused; new accepted | Old Rejected: Incorrect email or password. | new password accepted | PASS
+TC30 | 2.2 Accounts | Invalid | Change password with wrong current | Current password wrong | Rejected | Rejected: The current password is incorrect. | PASS
+TC31 | 2.2 Accounts | Normal | Salted password hashing | Hash the same password twice | Different hashes; both verify | Hashes differ; both verify | PASS
+TC32 | 2.3 Browse/search | Normal | Browse by category | Customer chooses Fruits | Only F1 listed | 1 product: F1 | PASS
+TC33 | 2.3 Browse/search | Normal | Search by product ID | v1 (lower case) | Exactly V1 | 1 result: V1 | PASS
+TC34 | 2.3 Browse/search | Normal | Search by part of the name | dEmO | All four products | 4 results | PASS
+TC35 | 2.3 Browse/search | Invalid | Search with no match | absent | Empty result | 0 results | PASS
+TC36 | 2.3 Browse/search | Invalid | Blank search text | Spaces only | Rejected | Rejected: Search text must contain 1-100 printable characters. | PASS
+TC37 | 2.3 Browse/search | Invalid | Browse while logged out | Log out, then view inventory | Rejected | Rejected: Please log in first. | PASS
+TC38 | 2.4 Orders (Builder) | Normal | Place a valid order | V1 x2, tomorrow, morning slot | ORD0001 status Placed; stock 20 to 18 | ORD0001 Placed; stock 18 | PASS
+TC39 | 2.4 Orders (Builder) | Invalid | Basket entry check | V1 stock set to 5 (Low Stock); customer enters V1, then F1 | V1 refused at once; F1 accepted | Rejected: V1 is Low Stock; only In Stock products can be ordered. | F1 accepted | PASS
+TC40 | 2.4 Orders (Builder) | Invalid | Order with no products | Empty basket | Rejected; no order saved | Rejected: An order must contain at least one product. | PASS
+TC41 | 2.4 Orders (Builder) | Invalid | Zero or negative quantity | V1 x0, then V1 x-1 | Both rejected | Rejected: Quantity must be at least 1. | Rejected: Quantity must be at least 1. | PASS
+TC42 | 2.4 Orders (Builder) | Invalid | Unknown product | Q9 x2 | Rejected | Rejected: Product Q9 not found. | PASS
+TC43 | 2.4 Orders (Builder) | Invalid | Same product twice | V1 x2 and v1 x2 | Rejected | Rejected: Product V1 is in the basket twice. | PASS
+TC44 | 2.4 Orders (Builder) | Boundary | Same-day delivery | Delivery date 2026-11-10 (today) | Rejected | Rejected: Same-day delivery is not available; choose 2026-11-11 or later. | PASS
+TC45 | 2.4 Orders (Builder) | Invalid | Delivery date in the past | 2026-11-09 | Rejected | Rejected: The delivery date is in the past; choose 2026-11-11 or later. | PASS
+TC46 | 2.4 Orders (Builder) | Boundary | Sri Lanka date, not UTC | Clock 2026-11-10 20:00 UTC (11 Nov in Colombo); deliver 11 Nov | Rejected as same-day | Rejected: Same-day delivery is not available; choose 2026-11-12 or later. | PASS
+TC47 | 2.4 Orders (Builder) | Invalid | No time slot chosen | Time slot missing | Rejected | Rejected: Choose a delivery time slot. | PASS
+TC48 | 2.4 Orders (Builder) | Invalid | More than the stock | V1 x21 (stock 20) | Rejected; stock stays 20 | Rejected: Only 20 of V1 available. | PASS
+TC49 | 2.4 Orders (Builder) | Boundary | Order the whole stock | V1 x20 (stock 20) | Accepted; V1 becomes Out of Stock | Stock 0; Out of Stock | PASS
+TC50 | 2.4 Orders (Builder) | Invalid | Low Stock product | V1 stock set to 5, order V1 x2 | Rejected (In Stock only) | Rejected: V1 is Low Stock; only In Stock products can be ordered. | PASS
+TC51 | 2.4 Orders (Builder) | Invalid | Out of Stock product | V1 stock set to 0, order V1 x2 | Rejected | Rejected: V1 is Out of Stock; only In Stock products can be ordered. | PASS
+TC52 | 2.4 Orders (Builder) | Invalid | One bad line stops the order | V1 x2 plus F1 x99 | Rejected; no stock or history change | Rejected: Only 20 of F1 available. | PASS
+TC53 | 2.4 Orders (Builder) | Boundary | Vegetables minimum order value | LKR 1,999.99 then 2,000.00 | Below rejected; 2,000 accepted, payable 2,400 | Rejected: The minimum order value for these categories is LKR 2,000.00. | 2000 accepted, payable 2400.00 | PASS
+TC54 | 2.4 Orders (Builder) | Boundary | Fruits minimum order value | LKR 2,499.99 then 2,500.00 | Below rejected; 2,500 accepted, payable 2,975 | Rejected: The minimum order value for these categories is LKR 2,500.00. | 2500 accepted, payable 2975.00 | PASS
+TC55 | 2.4 Orders (Builder) | Boundary | Dairy minimum order value | LKR 2,999.99 then 3,000.00 | Below rejected; 3,000 accepted, payable 3,640 | Rejected: The minimum order value for these categories is LKR 3,000.00. | 3000 accepted, payable 3640.00 | PASS
+TC56 | 2.4 Orders (Builder) | Boundary | Household minimum order value | LKR 3,999.99 then 4,000.00 | Below rejected; 4,000 accepted, payable 4,900 | Rejected: The minimum order value for these categories is LKR 4,000.00. | 4000 accepted, payable 4900.00 | PASS
+TC57 | 2.4 Orders (Builder) | Invalid | Mixed basket minimum | Vegetables 2,000 + Household 1,000 (total 3,000) | Rejected: highest minimum 4,000 applies | Rejected: The minimum order value for these categories is LKR 4,000.00. | PASS
+TC58 | 2.4 Orders (Builder) | Invalid | Builder without a customer | No forCustomer step | Rejected | Rejected: Only a registered customer can place an order. | PASS
+TC59 | 2.4 Orders (Builder) | Normal | Builder creates the order | Customer, V9 x2, D9 x1, tomorrow, evening | Two lines, chosen slot, initial status Placed | 2 lines; Evening 16:00-20:00; Placed | PASS
+TC60 | 2.4 Orders (Builder) | Normal | Price preview | Quote V1 x2 for tomorrow | Payable 2,400; nothing saved | Payable 2400.00; stock 20; no order | PASS
+TC61 | 2.4 Orders (Builder) | Invalid | Administrator places an order | Administrator logged in | Rejected | Rejected: Only customers can do this. | PASS
+TC62 | 2.4 Orders (Builder) | Normal | Sequential order IDs | Two orders | ORD0001 then ORD0002 | ORD0001, ORD0002 | PASS
+TC63 | 2.5 History/cancel (State) | Normal | Order history visibility | Each customer orders once; customer and admin view history | Customer sees 1 (own); administrator sees 2 | Customer 1; administrator 2 | PASS
+TC64 | 2.5 History/cancel (State) | Normal | History sorted by delivery date | ORD0001 for 14 Nov, ORD0002 for 11 Nov | ORD0002 listed first | First listed ORD0002 | PASS
+TC65 | 2.5 History/cancel (State) | Normal | Cancel a Placed order | Place V1 x2, then cancel | Status Cancelled; stock back to 20 | Cancelled; stock 20 | PASS
+TC66 | 2.5 History/cancel (State) | Normal | Cancel a Preparing order | Advance once, then cancel | Allowed; stock back to 20 | Cancelled from Preparing; stock 20 | PASS
+TC67 | 2.5 History/cancel (State) | Boundary | Cancel once Out for Delivery | Advance twice, then cancel | Rejected; stock stays 18 | Rejected: The order is Out for Delivery and can no longer be cancelled.; stock 18 | PASS
+TC68 | 2.5 History/cancel (State) | Invalid | Cancel a Delivered order | Advance three times, then cancel | Rejected | Rejected: The order is Delivered and can no longer be cancelled. | PASS
+TC69 | 2.5 History/cancel (State) | Invalid | Cancel twice | Cancel the same order again | Second rejected; stock stays 20 | Rejected: The order is Cancelled and can no longer be cancelled. | PASS
+TC70 | 2.5 History/cancel (State) | Normal | Full delivery lifecycle | Administrator advances ORD0001 three times, then once more | Preparing, Out for Delivery, Delivered; 4th refused | Preparing > Out for Delivery > Delivered | 4th Rejected: A Delivered order cannot move to another status. | PASS
+TC71 | 2.5 History/cancel (State) | Invalid | Advance a Cancelled order | Cancel, then administrator advances | Rejected | Rejected: A Cancelled order cannot move to another status. | PASS
+TC72 | 2.5 History/cancel (State) | Invalid | Customer changes delivery status | Customer calls advance | Rejected | Rejected: Only the administrator can do this. | PASS
+TC73 | 2.5 History/cancel (State) | Invalid | Another customer's order | Customer 2 views invoice / cancels ORD0001 | History empty; both rejected | Rejected: Order not found. | Rejected: Order not found. | PASS
+TC74 | 2.5 History/cancel (State) | Normal | State rules per status | Ask each state whether it can be cancelled | Placed, Preparing: yes; others: no | Placed=yes Preparing=yes Out for Delivery=no Delivered=no Cancelled=no | PASS
+TC75 | 2.5 History/cancel (State) | Invalid | Unknown saved status | Status code SHIPPED | Rejected | Rejected: Unknown order status SHIPPED. | PASS
+TC76 | 2.6 Billing (Strategy/Decorator) | Boundary | Discount threshold exactly LKR 10,000 | Vegetables 10,000.00 | No discount; payable 10,800 | Discount 0.00; payable 10800.00 | PASS
+TC77 | 2.6 Billing (Strategy/Decorator) | Boundary | Just above the threshold | Vegetables 10,000.01 | Discount 500; payable 10,275.01 | Discount 500.00; payable 10275.01 | PASS
+TC78 | 2.6 Billing (Strategy/Decorator) | Normal | Dairy bill with discount | Dairy 12,000 | Discount 960; delivery 400; tax 883.20; payable 12,323.20 | Discount 960.00; tax 883.20; payable 12323.20 | PASS
+TC79 | 2.6 Billing (Strategy/Decorator) | Normal | Mixed-category bill | Vegetables 6,000 + Household 6,000 | Discount 900; delivery 500; tax 825; payable 12,425 | Discount 900.00; delivery 500.00; tax 825.00; payable 12425.00 | PASS
+TC80 | 2.6 Billing (Strategy/Decorator) | Boundary | Rounding of tax | Vegetables 2,000.10 (tax 100.005) | Tax 100.01 (half up) | Tax 100.01 | PASS
+TC81 | 2.6 Billing (Strategy/Decorator) | Normal | Table 1 strategies | Read each category strategy | Fees 300/350/400/500; minimums 2,000/2,500/3,000/4,000 | fee/minimum [300/2000, 350/2500, 400/3000, 500/4000] | PASS
+TC82 | 2.6 Billing (Strategy/Decorator) | Normal | Swap a pricing strategy | Dairy uses a 20% promotion strategy; Dairy 12,000 | Discount 2,400 with no billing-code change; standard still 960 | Promotion discount 2400.00; standard discount 960.00 | PASS
+TC83 | 2.6 Billing (Strategy/Decorator) | Invalid | Invalid strategy rate | Discount rate 1.5 (150%) | Rejected | Rejected: Pricing values must be non-negative and rates between 0 and 1. | PASS
+TC84 | 2.6 Billing (Strategy/Decorator) | Normal | Decorator layer order | Build the bill for Dairy 12,000 | Product total > Discount > Delivery fee > Tax | Product total > Discount > Delivery fee > Tax | PASS
+TC85 | 2.6 Billing (Strategy/Decorator) | Normal | Running amount after each layer | Dairy 12,000 wrapped one layer at a time | 12,000 > 11,040 > 11,440 > 12,323.20 | 12000.00 > 11040.00 > 11440.00 > 12323.20 | PASS
+TC86 | 2.6 Billing (Strategy/Decorator) | Normal | Invoice contents | Invoice for ORD0001 (V1 x2) | Customer, product columns, all five bill amounts | All 12 required items present; payable LKR 2,400.00 | PASS
+TC87 | 2.6 Billing (Strategy/Decorator) | Normal | Invoice of a cancelled order | Cancel ORD0001, then view invoice | Marked cancelled; amount due LKR 0.00 | Header CANCELLED ORDER; due LKR 0.00 | PASS
+TC88 | 2.6 Billing (Strategy/Decorator) | Normal | Invoice keeps order-time details | Change profile and V1 price after ordering | Invoice text unchanged | Identical invoice text | PASS
+TC89 | 3.2 Observer | Normal | Customer notified of status changes | Place ORD0001; administrator advances it | 2 messages; inbox empty after reading | 2 messages; last: Order ORD0001 changed from Placed to Preparing. | PASS
+TC90 | 3.2 Observer | Normal | Two observers on one subject | Notifier and activity log; place, advance, cancel | Both receive all 3 changes | Inbox 3; log 3 entries | PASS
+TC91 | 3.2 Observer | Invalid | No notice for a refused change | Cancel at Out for Delivery (refused) | No new message | 3 messages (placed + 2 changes); none for the refusal | PASS
+TC92 | Data and design | Normal | Data kept after restart | Place and advance ORD0001; reopen the data file | Same order, status Preparing, stock 18 | ORD0001 Preparing; stock 18 | PASS
+TC93 | Data and design | Normal | No plain-text passwords | Decode every saved field | Password absent; PBKDF2 hash present | No plain text; hash stored | PASS
+TC94 | Data and design | Invalid | Damaged data file | File containing "damaged" | Load refused; file unchanged | Rejected: Unsupported or damaged FreshMart data file. | PASS
+TC95 | Data and design | Invalid | Save failure | Data file replaced by a folder; place order | Rejected; stock and history unchanged in memory | Rejected (file could not be written); stock 20; no order in memory | PASS
+TC96 | Data and design | Normal | Read-only lists | Clear the returned inventory and order lines | Both refuse changes | Both lists unmodifiable | PASS
+TC97 | Data and design | Normal | Polymorphic accounts | Admin and Customer held as Account | Each returns its own menu title | ADMINISTRATOR MENU - Boss / CUSTOMER MENU - Test Customer | PASS
+TC98 | Data and design | Normal | Generic merge sort | [5, 3, 9, 1, 3] | [1, 3, 3, 5, 9]; input unchanged | [1, 3, 3, 5, 9] | PASS
+RESULT: 98 passed; 0 failed.

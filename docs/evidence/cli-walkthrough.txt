@@ -1,0 +1,1176 @@
+
+----------------------------------------------------------------------
+  FRESHMART GROCERY DELIVERY SYSTEM
+----------------------------------------------------------------------
+
+----------------------------------------------------------------------
+  FIRST RUN - CREATE THE ADMINISTRATOR ACCOUNT
+----------------------------------------------------------------------
+Administrator name: FreshMart Admin
+Administrator email: admin@freshmart.example
+Password (at least 8 characters) (visible in this console): Admin@2026
+Administrator created. Please log in.
+
+WELCOME
+  1. Register as a new customer
+  2. Log in
+  0. Exit
+Choose an option (0-2): 2
+Email: admin@freshmart.example
+Password (visible in this console): Admin@2026
+Welcome, FreshMart Admin.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 3
+Product ID (e.g. V001): V001
+Product name: Carrots 1kg
+Category:
+  1. Vegetables
+  2. Fruits
+  3. Dairy
+  4. Household Essentials
+Select (1-4): 1
+Unit price (LKR): abc
+  Enter a positive amount with up to 2 decimals, e.g. 450 or 450.50.
+Unit price (LKR): 450
+Stock quantity (0-1000000): 40
+Product added.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 3
+Product ID (e.g. V001): V002
+Product name: Tomatoes 1kg
+Category:
+  1. Vegetables
+  2. Fruits
+  3. Dairy
+  4. Household Essentials
+Select (1-4): 1
+Unit price (LKR): 380
+Stock quantity (0-1000000): 3
+Product added.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 3
+Product ID (e.g. V001): F001
+Product name: Mangoes 1kg
+Category:
+  1. Vegetables
+  2. Fruits
+  3. Dairy
+  4. Household Essentials
+Select (1-4): 2
+Unit price (LKR): 1200
+Stock quantity (0-1000000): 25
+Product added.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 3
+Product ID (e.g. V001): D001
+Product name: Fresh Milk 1L
+Category:
+  1. Vegetables
+  2. Fruits
+  3. Dairy
+  4. Household Essentials
+Select (1-4): 3
+Unit price (LKR): 520
+Stock quantity (0-1000000): 60
+Product added.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 3
+Product ID (e.g. V001): D002
+Product name: Cheddar Cheese 500g
+Category:
+  1. Vegetables
+  2. Fruits
+  3. Dairy
+  4. Household Essentials
+Select (1-4): 3
+Unit price (LKR): 2400
+Stock quantity (0-1000000): 12
+Product added.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 3
+Product ID (e.g. V001): H001
+Product name: Dish Wash Liquid 500ml
+Category:
+  1. Vegetables
+  2. Fruits
+  3. Dairy
+  4. Household Essentials
+Select (1-4): 4
+Unit price (LKR): 650
+Stock quantity (0-1000000): 30
+Product added.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 3
+Product ID (e.g. V001): H002
+Product name: Laundry Detergent 2kg
+Category:
+  1. Vegetables
+  2. Fruits
+  3. Dairy
+  4. Household Essentials
+Select (1-4): 4
+Unit price (LKR): 2950
+Stock quantity (0-1000000): 8
+Product added.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 3
+Product ID (e.g. V001): H003
+Product name: Floor Cleaner 1L
+Category:
+  1. Vegetables
+  2. Fruits
+  3. Dairy
+  4. Household Essentials
+Select (1-4): 4
+Unit price (LKR): 890
+Stock quantity (0-1000000): 15
+Product added.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 3
+Product ID (e.g. V001): V001
+Error: Product V001 already exists. Use option 4 to update it.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 1
+  0. All categories
+  1. Vegetables
+  2. Fruits
+  3. Dairy
+  4. Household Essentials
+Category (0-4): 0
+ID       | Name                     | Category             |     Unit price | Quantity | Status
+V001     | Carrots 1kg              | Vegetables           | LKR     450.00 |       40 | In Stock
+V002     | Tomatoes 1kg             | Vegetables           | LKR     380.00 |        3 | Low Stock
+F001     | Mangoes 1kg              | Fruits               | LKR   1,200.00 |       25 | In Stock
+D002     | Cheddar Cheese 500g      | Dairy                | LKR   2,400.00 |       12 | In Stock
+D001     | Fresh Milk 1L            | Dairy                | LKR     520.00 |       60 | In Stock
+H001     | Dish Wash Liquid 500ml   | Household Essentials | LKR     650.00 |       30 | In Stock
+H003     | Floor Cleaner 1L         | Household Essentials | LKR     890.00 |       15 | In Stock
+H002     | Laundry Detergent 2kg    | Household Essentials | LKR   2,950.00 |        8 | In Stock
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 1
+  0. All categories
+  1. Vegetables
+  2. Fruits
+  3. Dairy
+  4. Household Essentials
+Category (0-4): 3
+ID       | Name                     | Category             |     Unit price | Quantity | Status
+D002     | Cheddar Cheese 500g      | Dairy                | LKR   2,400.00 |       12 | In Stock
+D001     | Fresh Milk 1L            | Dairy                | LKR     520.00 |       60 | In Stock
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 4
+Product ID: H002
+Product name: Laundry Detergent 2kg
+Category:
+  1. Vegetables
+  2. Fruits
+  3. Dairy
+  4. Household Essentials
+Select (1-4): 4
+Unit price (LKR): 2850
+Stock quantity (0-1000000): 8
+Product updated.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 5
+Product ID: H002
+New stock quantity (0-1000000): 0
+Stock quantity updated.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 6
+Product ID: H001
+New stock status:
+  1. In Stock
+  2. Low Stock
+  3. Out of Stock
+Select (1-3): 2
+Stock status updated.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 7
+Product ID: H003
+Permanently remove product H003? (Y/N): Y
+Product removed.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 1
+  0. All categories
+  1. Vegetables
+  2. Fruits
+  3. Dairy
+  4. Household Essentials
+Category (0-4): 4
+ID       | Name                     | Category             |     Unit price | Quantity | Status
+H001     | Dish Wash Liquid 500ml   | Household Essentials | LKR     650.00 |       30 | Low Stock
+H002     | Laundry Detergent 2kg    | Household Essentials | LKR   2,850.00 |        0 | Out of Stock
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 0
+You have been logged out.
+
+WELCOME
+  1. Register as a new customer
+  2. Log in
+  0. Exit
+Choose an option (0-2): 1
+NIC (9 digits + V/X, or 12 digits): 12345
+Full name: Nimali Perera
+Contact number: 0771234567
+Delivery address: 12 Lake Road, Colombo 05
+Email address: nimali.perera@example.com
+Password (at least 8 characters) (visible in this console): NimaliPass1
+Error: NIC must be 9 digits followed by V/X, or 12 digits.
+
+WELCOME
+  1. Register as a new customer
+  2. Log in
+  0. Exit
+Choose an option (0-2): 1
+NIC (9 digits + V/X, or 12 digits): 200012345678
+Full name: Nimali Perera
+Contact number: 0771234567
+Delivery address: 12 Lake Road, Colombo 05
+Email address: nimali.perera@example.com
+Password (at least 8 characters) (visible in this console): NimaliPass1
+Account created. You can now log in with nimali.perera@example.com.
+
+WELCOME
+  1. Register as a new customer
+  2. Log in
+  0. Exit
+Choose an option (0-2): 2
+Email: nimali.perera@example.com
+Password (visible in this console): NimaliPass1
+Welcome, Nimali Perera.
+
+----------------------------------------------------------------------
+  CUSTOMER MENU - Nimali Perera
+----------------------------------------------------------------------
+  1. Browse products by category
+  2. Search products (name or ID)
+  3. Place a delivery order
+  4. View order history
+  5. Cancel an order
+  6. View / export invoice
+  7. Edit my profile
+  8. Change password
+  9. View notifications
+  0. Log out
+Choose an option (0-9): 1
+  0. All categories
+  1. Vegetables
+  2. Fruits
+  3. Dairy
+  4. Household Essentials
+Category (0-4): 2
+ID       | Name                     | Category             |     Unit price | Quantity | Status
+F001     | Mangoes 1kg              | Fruits               | LKR   1,200.00 |       25 | In Stock
+
+----------------------------------------------------------------------
+  CUSTOMER MENU - Nimali Perera
+----------------------------------------------------------------------
+  1. Browse products by category
+  2. Search products (name or ID)
+  3. Place a delivery order
+  4. View order history
+  5. Cancel an order
+  6. View / export invoice
+  7. Edit my profile
+  8. Change password
+  9. View notifications
+  0. Log out
+Choose an option (0-9): 2
+Product name or ID: milk
+ID       | Name                     | Category             |     Unit price | Quantity | Status
+D001     | Fresh Milk 1L            | Dairy                | LKR     520.00 |       60 | In Stock
+
+----------------------------------------------------------------------
+  CUSTOMER MENU - Nimali Perera
+----------------------------------------------------------------------
+  1. Browse products by category
+  2. Search products (name or ID)
+  3. Place a delivery order
+  4. View order history
+  5. Cancel an order
+  6. View / export invoice
+  7. Edit my profile
+  8. Change password
+  9. View notifications
+  0. Log out
+Choose an option (0-9): 2
+Product name or ID: f001
+ID       | Name                     | Category             |     Unit price | Quantity | Status
+F001     | Mangoes 1kg              | Fruits               | LKR   1,200.00 |       25 | In Stock
+
+----------------------------------------------------------------------
+  CUSTOMER MENU - Nimali Perera
+----------------------------------------------------------------------
+  1. Browse products by category
+  2. Search products (name or ID)
+  3. Place a delivery order
+  4. View order history
+  5. Cancel an order
+  6. View / export invoice
+  7. Edit my profile
+  8. Change password
+  9. View notifications
+  0. Log out
+Choose an option (0-9): 3
+ID       | Name                     | Category             |     Unit price | Quantity | Status
+V001     | Carrots 1kg              | Vegetables           | LKR     450.00 |       40 | In Stock
+V002     | Tomatoes 1kg             | Vegetables           | LKR     380.00 |        3 | Low Stock
+F001     | Mangoes 1kg              | Fruits               | LKR   1,200.00 |       25 | In Stock
+D002     | Cheddar Cheese 500g      | Dairy                | LKR   2,400.00 |       12 | In Stock
+D001     | Fresh Milk 1L            | Dairy                | LKR     520.00 |       60 | In Stock
+H001     | Dish Wash Liquid 500ml   | Household Essentials | LKR     650.00 |       30 | Low Stock
+H002     | Laundry Detergent 2kg    | Household Essentials | LKR   2,850.00 |        0 | Out of Stock
+Only products marked In Stock can be ordered. Press Enter on an empty line to finish.
+Product ID: V002
+  V002 is Low Stock; only In Stock products can be ordered.
+Product ID: H002
+  H002 is Out of Stock; only In Stock products can be ordered.
+Product ID: F001
+Quantity (1-25): 1
+Product ID: 
+Delivery date (tomorrow or later) (YYYY-MM-DD): 27-11-2026
+  Dates must use the format YYYY-MM-DD, e.g. 2026-12-24.
+Delivery date (tomorrow or later) (YYYY-MM-DD): 2026-11-27
+Delivery time slot:
+  1. Morning 09:00-12:00
+  2. Afternoon 12:00-16:00
+  3. Evening 16:00-20:00
+Select (1-3): 1
+Error: Same-day delivery is not available; choose 2026-11-28 or later.
+
+----------------------------------------------------------------------
+  CUSTOMER MENU - Nimali Perera
+----------------------------------------------------------------------
+  1. Browse products by category
+  2. Search products (name or ID)
+  3. Place a delivery order
+  4. View order history
+  5. Cancel an order
+  6. View / export invoice
+  7. Edit my profile
+  8. Change password
+  9. View notifications
+  0. Log out
+Choose an option (0-9): 3
+ID       | Name                     | Category             |     Unit price | Quantity | Status
+V001     | Carrots 1kg              | Vegetables           | LKR     450.00 |       40 | In Stock
+V002     | Tomatoes 1kg             | Vegetables           | LKR     380.00 |        3 | Low Stock
+F001     | Mangoes 1kg              | Fruits               | LKR   1,200.00 |       25 | In Stock
+D002     | Cheddar Cheese 500g      | Dairy                | LKR   2,400.00 |       12 | In Stock
+D001     | Fresh Milk 1L            | Dairy                | LKR     520.00 |       60 | In Stock
+H001     | Dish Wash Liquid 500ml   | Household Essentials | LKR     650.00 |       30 | Low Stock
+H002     | Laundry Detergent 2kg    | Household Essentials | LKR   2,850.00 |        0 | Out of Stock
+Only products marked In Stock can be ordered. Press Enter on an empty line to finish.
+Product ID: F001
+Quantity (1-25): 1
+Product ID: 
+Delivery date (tomorrow or later) (YYYY-MM-DD): 2026-11-30
+Delivery time slot:
+  1. Morning 09:00-12:00
+  2. Afternoon 12:00-16:00
+  3. Evening 16:00-20:00
+Select (1-3): 1
+Error: The minimum order value for these categories is LKR 2,500.00.
+
+----------------------------------------------------------------------
+  CUSTOMER MENU - Nimali Perera
+----------------------------------------------------------------------
+  1. Browse products by category
+  2. Search products (name or ID)
+  3. Place a delivery order
+  4. View order history
+  5. Cancel an order
+  6. View / export invoice
+  7. Edit my profile
+  8. Change password
+  9. View notifications
+  0. Log out
+Choose an option (0-9): 3
+ID       | Name                     | Category             |     Unit price | Quantity | Status
+V001     | Carrots 1kg              | Vegetables           | LKR     450.00 |       40 | In Stock
+V002     | Tomatoes 1kg             | Vegetables           | LKR     380.00 |        3 | Low Stock
+F001     | Mangoes 1kg              | Fruits               | LKR   1,200.00 |       25 | In Stock
+D002     | Cheddar Cheese 500g      | Dairy                | LKR   2,400.00 |       12 | In Stock
+D001     | Fresh Milk 1L            | Dairy                | LKR     520.00 |       60 | In Stock
+H001     | Dish Wash Liquid 500ml   | Household Essentials | LKR     650.00 |       30 | Low Stock
+H002     | Laundry Detergent 2kg    | Household Essentials | LKR   2,850.00 |        0 | Out of Stock
+Only products marked In Stock can be ordered. Press Enter on an empty line to finish.
+Product ID: D002
+Quantity (1-12): 3
+Product ID: F001
+Quantity (1-25): 2
+Product ID: V001
+Quantity (1-40): 4
+Product ID: 
+Delivery date (tomorrow or later) (YYYY-MM-DD): 2026-11-30
+Delivery time slot:
+  1. Morning 09:00-12:00
+  2. Afternoon 12:00-16:00
+  3. Evening 16:00-20:00
+Select (1-3): 1
+
+ORDER PREVIEW - delivery 2026-11-30, Morning 09:00-12:00
+ID       Product                  Category                 Unit price   Qty      Line total
+--------------------------------------------------------------------------------------------
+D002     Cheddar Cheese 500g      Dairy                  LKR 2,400.00     3    LKR 7,200.00
+F001     Mangoes 1kg              Fruits                 LKR 1,200.00     2    LKR 2,400.00
+V001     Carrots 1kg              Vegetables               LKR 450.00     4    LKR 1,800.00
+--------------------------------------------------------------------------------------------
+                                                            Product total      LKR 11,400.00
+                                                         Discount applied       - LKR 786.00
+                                                             Delivery fee         LKR 400.00
+                                                                Tax added         LKR 729.42
+============================================================================================
+                                                     FINAL PAYABLE AMOUNT      LKR 11,743.42
+
+Place this order? (Y/N): Y
+Order placed. Your order ID is ORD0001.
+
+----------------------------------------------------------------------
+  CUSTOMER MENU - Nimali Perera
+----------------------------------------------------------------------
+  You have 1 new notification(s) - choose option 9.
+  1. Browse products by category
+  2. Search products (name or ID)
+  3. Place a delivery order
+  4. View order history
+  5. Cancel an order
+  6. View / export invoice
+  7. Edit my profile
+  8. Change password
+  9. View notifications
+  0. Log out
+Choose an option (0-9): 3
+ID       | Name                     | Category             |     Unit price | Quantity | Status
+V001     | Carrots 1kg              | Vegetables           | LKR     450.00 |       36 | In Stock
+V002     | Tomatoes 1kg             | Vegetables           | LKR     380.00 |        3 | Low Stock
+F001     | Mangoes 1kg              | Fruits               | LKR   1,200.00 |       23 | In Stock
+D002     | Cheddar Cheese 500g      | Dairy                | LKR   2,400.00 |        9 | In Stock
+D001     | Fresh Milk 1L            | Dairy                | LKR     520.00 |       60 | In Stock
+H001     | Dish Wash Liquid 500ml   | Household Essentials | LKR     650.00 |       30 | Low Stock
+H002     | Laundry Detergent 2kg    | Household Essentials | LKR   2,850.00 |        0 | Out of Stock
+Only products marked In Stock can be ordered. Press Enter on an empty line to finish.
+Product ID: D001
+Quantity (1-60): 6
+Product ID: 
+Delivery date (tomorrow or later) (YYYY-MM-DD): 2026-12-01
+Delivery time slot:
+  1. Morning 09:00-12:00
+  2. Afternoon 12:00-16:00
+  3. Evening 16:00-20:00
+Select (1-3): 3
+
+ORDER PREVIEW - delivery 2026-12-01, Evening 16:00-20:00
+ID       Product                  Category                 Unit price   Qty      Line total
+--------------------------------------------------------------------------------------------
+D001     Fresh Milk 1L            Dairy                    LKR 520.00     6    LKR 3,120.00
+--------------------------------------------------------------------------------------------
+                                                            Product total       LKR 3,120.00
+                                                         Discount applied         - LKR 0.00
+                                                             Delivery fee         LKR 400.00
+                                                                Tax added         LKR 249.60
+============================================================================================
+                                                     FINAL PAYABLE AMOUNT       LKR 3,769.60
+
+Place this order? (Y/N): Y
+Order placed. Your order ID is ORD0002.
+
+----------------------------------------------------------------------
+  CUSTOMER MENU - Nimali Perera
+----------------------------------------------------------------------
+  You have 2 new notification(s) - choose option 9.
+  1. Browse products by category
+  2. Search products (name or ID)
+  3. Place a delivery order
+  4. View order history
+  5. Cancel an order
+  6. View / export invoice
+  7. Edit my profile
+  8. Change password
+  9. View notifications
+  0. Log out
+Choose an option (0-9): 4
+ORD0001  | NIC 200012345678 | 2026-11-30 | Morning 09:00-12:00    | 3 item(s) | Placed
+ORD0002  | NIC 200012345678 | 2026-12-01 | Evening 16:00-20:00    | 1 item(s) | Placed
+
+----------------------------------------------------------------------
+  CUSTOMER MENU - Nimali Perera
+----------------------------------------------------------------------
+  You have 2 new notification(s) - choose option 9.
+  1. Browse products by category
+  2. Search products (name or ID)
+  3. Place a delivery order
+  4. View order history
+  5. Cancel an order
+  6. View / export invoice
+  7. Edit my profile
+  8. Change password
+  9. View notifications
+  0. Log out
+Choose an option (0-9): 6
+Order ID: ORD0001
+============================================================================================
+FRESHMART GROCERY DELIVERY - INVOICE                                           Order ORD0001
+============================================================================================
+Customer : NIC 200012345678 | Nimali Perera | 0771234567 | 12 Lake Road, Colombo 05 | nimali.perera@example.com
+Delivery : 2026-11-30 | Morning 09:00-12:00
+Status   : Placed
+--------------------------------------------------------------------------------------------
+ID       Product                  Category                 Unit price   Qty      Line total
+--------------------------------------------------------------------------------------------
+D002     Cheddar Cheese 500g      Dairy                  LKR 2,400.00     3    LKR 7,200.00
+F001     Mangoes 1kg              Fruits                 LKR 1,200.00     2    LKR 2,400.00
+V001     Carrots 1kg              Vegetables               LKR 450.00     4    LKR 1,800.00
+--------------------------------------------------------------------------------------------
+                                                            Product total      LKR 11,400.00
+                                                         Discount applied       - LKR 786.00
+                                                             Delivery fee         LKR 400.00
+                                                                Tax added         LKR 729.42
+============================================================================================
+                                                     FINAL PAYABLE AMOUNT      LKR 11,743.42
+Payment: cash on delivery.
+
+Save this invoice as a text file? (Y/N): N
+
+----------------------------------------------------------------------
+  CUSTOMER MENU - Nimali Perera
+----------------------------------------------------------------------
+  You have 2 new notification(s) - choose option 9.
+  1. Browse products by category
+  2. Search products (name or ID)
+  3. Place a delivery order
+  4. View order history
+  5. Cancel an order
+  6. View / export invoice
+  7. Edit my profile
+  8. Change password
+  9. View notifications
+  0. Log out
+Choose an option (0-9): 5
+Order ID: ORD0002
+Cancel order ORD0002? (Y/N): Y
+Order cancelled and items returned to stock.
+
+----------------------------------------------------------------------
+  CUSTOMER MENU - Nimali Perera
+----------------------------------------------------------------------
+  You have 3 new notification(s) - choose option 9.
+  1. Browse products by category
+  2. Search products (name or ID)
+  3. Place a delivery order
+  4. View order history
+  5. Cancel an order
+  6. View / export invoice
+  7. Edit my profile
+  8. Change password
+  9. View notifications
+  0. Log out
+Choose an option (0-9): 4
+ORD0001  | NIC 200012345678 | 2026-11-30 | Morning 09:00-12:00    | 3 item(s) | Placed
+ORD0002  | NIC 200012345678 | 2026-12-01 | Evening 16:00-20:00    | 1 item(s) | Cancelled
+
+----------------------------------------------------------------------
+  CUSTOMER MENU - Nimali Perera
+----------------------------------------------------------------------
+  You have 3 new notification(s) - choose option 9.
+  1. Browse products by category
+  2. Search products (name or ID)
+  3. Place a delivery order
+  4. View order history
+  5. Cancel an order
+  6. View / export invoice
+  7. Edit my profile
+  8. Change password
+  9. View notifications
+  0. Log out
+Choose an option (0-9): 7
+Current details: NIC 200012345678 | Nimali Perera | 0771234567 | 12 Lake Road, Colombo 05 | nimali.perera@example.com
+Full name: Nimali Perera
+Contact number: 0777654321
+Delivery address: 12 Lake Road, Colombo 05
+Email address: nimali.perera@example.com
+Profile updated (your NIC cannot be changed).
+
+----------------------------------------------------------------------
+  CUSTOMER MENU - Nimali Perera
+----------------------------------------------------------------------
+  You have 3 new notification(s) - choose option 9.
+  1. Browse products by category
+  2. Search products (name or ID)
+  3. Place a delivery order
+  4. View order history
+  5. Cancel an order
+  6. View / export invoice
+  7. Edit my profile
+  8. Change password
+  9. View notifications
+  0. Log out
+Choose an option (0-9): 0
+You have been logged out.
+
+WELCOME
+  1. Register as a new customer
+  2. Log in
+  0. Exit
+Choose an option (0-2): 2
+Email: admin@freshmart.example
+Password (visible in this console): Admin@2026
+Welcome, FreshMart Admin.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 8
+ORD0001  | NIC 200012345678 | 2026-11-30 | Morning 09:00-12:00    | 3 item(s) | Placed
+ORD0002  | NIC 200012345678 | 2026-12-01 | Evening 16:00-20:00    | 1 item(s) | Cancelled
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 9
+Order ID: ORD0001
+Move order ORD0001 to its next delivery status? (Y/N): Y
+Order ORD0001 is now Preparing.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 9
+Order ID: ORD0001
+Move order ORD0001 to its next delivery status? (Y/N): Y
+Order ORD0001 is now Out for Delivery.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 9
+Order ID: ORD0002
+Move order ORD0002 to its next delivery status? (Y/N): Y
+Error: A Cancelled order cannot move to another status.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 11
+  2026-11-27 17:25 | ORD0001  | NIC 200012345678 | (new order)      -> Placed
+  2026-11-27 17:25 | ORD0002  | NIC 200012345678 | (new order)      -> Placed
+  2026-11-27 17:25 | ORD0002  | NIC 200012345678 | Placed           -> Cancelled
+  2026-11-27 17:26 | ORD0001  | NIC 200012345678 | Placed           -> Preparing
+  2026-11-27 17:26 | ORD0001  | NIC 200012345678 | Preparing        -> Out for Delivery
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 1
+  0. All categories
+  1. Vegetables
+  2. Fruits
+  3. Dairy
+  4. Household Essentials
+Category (0-4): 4
+ID       | Name                     | Category             |     Unit price | Quantity | Status
+H001     | Dish Wash Liquid 500ml   | Household Essentials | LKR     650.00 |       30 | Low Stock
+H002     | Laundry Detergent 2kg    | Household Essentials | LKR   2,850.00 |        0 | Out of Stock
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 0
+You have been logged out.
+
+WELCOME
+  1. Register as a new customer
+  2. Log in
+  0. Exit
+Choose an option (0-2): 2
+Email: nimali.perera@example.com
+Password (visible in this console): NimaliPass1
+Welcome, Nimali Perera.
+
+----------------------------------------------------------------------
+  CUSTOMER MENU - Nimali Perera
+----------------------------------------------------------------------
+  You have 5 new notification(s) - choose option 9.
+  1. Browse products by category
+  2. Search products (name or ID)
+  3. Place a delivery order
+  4. View order history
+  5. Cancel an order
+  6. View / export invoice
+  7. Edit my profile
+  8. Change password
+  9. View notifications
+  0. Log out
+Choose an option (0-9): 9
+  * Order ORD0001 placed for delivery on 2026-11-30 (Morning 09:00-12:00).
+  * Order ORD0002 placed for delivery on 2026-12-01 (Evening 16:00-20:00).
+  * Order ORD0002 changed from Placed to Cancelled.
+  * Order ORD0001 changed from Placed to Preparing.
+  * Order ORD0001 changed from Preparing to Out for Delivery.
+
+----------------------------------------------------------------------
+  CUSTOMER MENU - Nimali Perera
+----------------------------------------------------------------------
+  1. Browse products by category
+  2. Search products (name or ID)
+  3. Place a delivery order
+  4. View order history
+  5. Cancel an order
+  6. View / export invoice
+  7. Edit my profile
+  8. Change password
+  9. View notifications
+  0. Log out
+Choose an option (0-9): 5
+Order ID: ORD0001
+Cancel order ORD0001? (Y/N): Y
+Error: The order is Out for Delivery and can no longer be cancelled.
+
+----------------------------------------------------------------------
+  CUSTOMER MENU - Nimali Perera
+----------------------------------------------------------------------
+  1. Browse products by category
+  2. Search products (name or ID)
+  3. Place a delivery order
+  4. View order history
+  5. Cancel an order
+  6. View / export invoice
+  7. Edit my profile
+  8. Change password
+  9. View notifications
+  0. Log out
+Choose an option (0-9): 0
+You have been logged out.
+
+WELCOME
+  1. Register as a new customer
+  2. Log in
+  0. Exit
+Choose an option (0-2): 2
+Email: admin@freshmart.example
+Password (visible in this console): Admin@2026
+Welcome, FreshMart Admin.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 9
+Order ID: ORD0001
+Move order ORD0001 to its next delivery status? (Y/N): Y
+Order ORD0001 is now Delivered.
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 10
+Order ID: ORD0001
+============================================================================================
+FRESHMART GROCERY DELIVERY - INVOICE                                           Order ORD0001
+============================================================================================
+Customer : NIC 200012345678 | Nimali Perera | 0771234567 | 12 Lake Road, Colombo 05 | nimali.perera@example.com
+Delivery : 2026-11-30 | Morning 09:00-12:00
+Status   : Delivered
+--------------------------------------------------------------------------------------------
+ID       Product                  Category                 Unit price   Qty      Line total
+--------------------------------------------------------------------------------------------
+D002     Cheddar Cheese 500g      Dairy                  LKR 2,400.00     3    LKR 7,200.00
+F001     Mangoes 1kg              Fruits                 LKR 1,200.00     2    LKR 2,400.00
+V001     Carrots 1kg              Vegetables               LKR 450.00     4    LKR 1,800.00
+--------------------------------------------------------------------------------------------
+                                                            Product total      LKR 11,400.00
+                                                         Discount applied       - LKR 786.00
+                                                             Delivery fee         LKR 400.00
+                                                                Tax added         LKR 729.42
+============================================================================================
+                                                     FINAL PAYABLE AMOUNT      LKR 11,743.42
+Payment: cash on delivery.
+
+Save this invoice as a text file? (Y/N): N
+
+----------------------------------------------------------------------
+  ADMINISTRATOR MENU - FreshMart Admin
+----------------------------------------------------------------------
+  1. View inventory by category
+  2. Search products (name or ID)
+  3. Add product
+  4. Update product details
+  5. Update stock quantity
+  6. Update stock status
+  7. Remove product
+  8. View all orders
+  9. Advance an order's delivery status
+ 10. View invoice
+ 11. View order activity log
+  0. Log out
+Choose an option (0-11): 0
+You have been logged out.
+
+WELCOME
+  1. Register as a new customer
+  2. Log in
+  0. Exit
+Choose an option (0-2): 0
+Goodbye.

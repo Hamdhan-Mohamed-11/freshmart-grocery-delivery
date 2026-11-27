@@ -7,7 +7,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -17,9 +16,14 @@ import java.util.Objects;
  * All FreshMart business rules and access control, independent of the console.
  *
  * <p>Every change follows the same steps: check the logged-in role, validate the request, apply it
- * to a copy of the store, save that copy, and only then make it the live store. The service is also
- * the <em>subject</em> in the Observer pattern: it notifies registered {@link EUK00361749_OrderObserver}s
- * whenever an order's status changes.
+ * to a copy of the store, save that copy, and only then make it the live store.
+ *
+ * <p>Design patterns used here: orders are assembled by the
+ * {@link EUK00361749_Order.EUK00361749_OrderBuilder} (Builder); status changes are delegated to the
+ * order's {@link EUK00361749_OrderState} (State); the service is the <em>subject</em> that notifies
+ * registered {@link EUK00361749_OrderObserver}s (Observer); bills are layered by
+ * {@link EUK00361749_BillCalculator} (Decorator) using the category strategies in
+ * {@link EUK00361749_PricingCatalogue} (Strategy).
  */
 public final class EUK00361749_Service {
 
@@ -28,7 +32,8 @@ public final class EUK00361749_Service {
 
     private final Path dataFile;
     private final Clock clock;
-    private final EUK00361749_PricingPolicy pricingPolicy;
+    private final EUK00361749_PricingCatalogue pricingCatalogue;
+    private final EUK00361749_BillCalculator billCalculator;
     private final List<EUK00361749_OrderObserver> orderObservers = new ArrayList<>();
     private EUK00361749_Store store;
     private String loggedInAccountId;
@@ -38,12 +43,14 @@ public final class EUK00361749_Service {
      *
      * @param dataFile      file used for saving all records
      * @param clock         source of "today" (fixed in tests)
-     * @param pricingPolicy pricing strategy used for quotes and invoices
+     * @param pricingCatalogue category pricing strategies used for orders, quotes and invoices
      */
-    public EUK00361749_Service(Path dataFile, Clock clock, EUK00361749_PricingPolicy pricingPolicy) throws IOException {
+    public EUK00361749_Service(Path dataFile, Clock clock, EUK00361749_PricingCatalogue pricingCatalogue)
+            throws IOException {
         this.dataFile = dataFile;
         this.clock = clock.withZone(STORE_ZONE);
-        this.pricingPolicy = Objects.requireNonNull(pricingPolicy);
+        this.pricingCatalogue = Objects.requireNonNull(pricingCatalogue);
+        this.billCalculator = new EUK00361749_BillCalculator(pricingCatalogue);
         this.store = EUK00361749_Store.loadFromFile(dataFile);
     }
 
@@ -55,9 +62,9 @@ public final class EUK00361749_Service {
         orderObservers.add(Objects.requireNonNull(observer));
     }
 
-    private void notifyOrderObservers(EUK00361749_Order order, EUK00361749_OrderStatus previousStatus) {
+    private void notifyOrderObservers(EUK00361749_Order order, EUK00361749_OrderState previousState) {
         for (EUK00361749_OrderObserver observer : orderObservers) {
-            observer.orderStatusChanged(order, previousStatus);
+            observer.orderStatusChanged(order, previousState);
         }
     }
 
@@ -242,19 +249,44 @@ public final class EUK00361749_Service {
         return List.copyOf(matches);
     }
 
+    /** @return true if a product with this ID exists (lets the console warn the administrator early). */
+    public boolean productExists(String productId) {
+        requireAdministrator();
+        return store.findProduct(productId) != null;
+    }
+
     // =====================================================================
     // Customer: orders
     // =====================================================================
 
-    /** Prices a basket without placing the order, so the customer can review it first. */
-    public EUK00361749_Invoice quoteOrder(Map<String, Integer> basket) {
+    /**
+     * Looks up a product while the customer fills the basket, so a product that cannot be ordered
+     * is reported at once. The order builder checks the same rule again before the order is made.
+     */
+    public EUK00361749_Product findOrderableProduct(String productId) {
         requireCustomer();
-        return pricingPolicy.calculate(buildOrderLines(basket));
+        EUK00361749_Product product = findProductOrFail(productId);
+        if (product.stockStatus() != EUK00361749_StockStatus.IN_STOCK) {
+            throw new IllegalArgumentException(product.productId() + " is " + product.stockStatus()
+                    + "; only In Stock products can be ordered.");
+        }
+        return product;
     }
 
     /**
-     * Places an order: checks the delivery date and stock, prices it (which also checks the minimum
-     * order value), reduces stock, saves, and notifies observers.
+     * Prices a basket without placing the order, so the customer can review it first. The same
+     * builder validation runs as for a real order, so the preview never shows an order that would
+     * later be refused.
+     */
+    public EUK00361749_Invoice quoteOrder(Map<String, Integer> basket, LocalDate deliveryDate,
+                                          EUK00361749_TimeSlot timeSlot) {
+        List<EUK00361749_OrderLine> lines = prepareOrder(basket, deliveryDate, timeSlot).validate();
+        return billCalculator.calculate(lines);
+    }
+
+    /**
+     * Places an order (the main algorithm): the builder validates every order rule, then stock is
+     * reserved, the order is saved with status Placed and observers are notified.
      *
      * @param basket       product ID mapped to quantity
      * @param deliveryDate tomorrow or later (same-day delivery is not allowed)
@@ -262,26 +294,12 @@ public final class EUK00361749_Service {
      */
     public EUK00361749_Order placeOrder(Map<String, Integer> basket, LocalDate deliveryDate,
                                         EUK00361749_TimeSlot timeSlot) throws IOException {
-        EUK00361749_Customer customer = requireCustomer();
-        LocalDate today = LocalDate.now(clock);
-        if (deliveryDate == null || !deliveryDate.isAfter(today)) {
-            throw new IllegalArgumentException("Same-day delivery is not available; choose " + today.plusDays(1) + " or later.");
-        }
-        Objects.requireNonNull(timeSlot, "Choose a delivery time slot.");
-
-        List<EUK00361749_OrderLine> orderLines = buildOrderLines(basket);
-        pricingPolicy.calculate(orderLines); // validates the minimum order value before any stock changes
-
-        EUK00361749_Order.EUK00361749_OrderBuilder builder =
-                new EUK00361749_Order.EUK00361749_OrderBuilder(generateNextOrderId(), customer)
-                        .deliverOn(deliveryDate, timeSlot);
+        EUK00361749_Order order = prepareOrder(basket, deliveryDate, timeSlot).build(generateNextOrderId());
         EUK00361749_Store updated = new EUK00361749_Store(store);
-        for (EUK00361749_OrderLine line : orderLines) {
-            builder.addLine(line);
+        for (EUK00361749_OrderLine line : order.lines()) {
             EUK00361749_Product product = findProductOrFail(line.productId());
             updated.saveProduct(product.withStockQuantity(product.stockQuantity() - line.quantity()));
         }
-        EUK00361749_Order order = builder.build();
         updated.saveOrder(order);
         commitChanges(updated);
         notifyOrderObservers(order, null);
@@ -307,41 +325,40 @@ public final class EUK00361749_Service {
         return List.copyOf(EUK00361749_Sorter.mergeSort(visible, byDeliveryDate));
     }
 
-    /** Cancels an order that is not yet Out for Delivery and returns its items to stock. */
+    /**
+     * Cancels an order and returns its items to stock. The order's current state decides whether
+     * cancellation is allowed (only Placed and Preparing allow it).
+     */
     public void cancelOrder(String orderId) throws IOException {
         requireCustomer();
         EUK00361749_Order order = findAccessibleOrder(orderId);
-        if (!order.status().isCancellable()) {
-            throw new IllegalArgumentException("Order " + order.orderId() + " is " + order.status()
-                    + " and can no longer be cancelled.");
-        }
+        EUK00361749_Order cancelled = order.cancel(); // State pattern: refused from Out for Delivery on
         EUK00361749_Store updated = new EUK00361749_Store(store);
         for (EUK00361749_OrderLine line : order.lines()) {
             EUK00361749_Product product = findProductOrFail(line.productId());
             updated.saveProduct(product.withStockQuantity(Math.addExact(product.stockQuantity(), line.quantity())));
         }
-        EUK00361749_Order cancelled = order.withStatus(EUK00361749_OrderStatus.CANCELLED);
         updated.saveOrder(cancelled);
         commitChanges(updated);
-        notifyOrderObservers(cancelled, order.status());
+        notifyOrderObservers(cancelled, order.state());
     }
 
-    /** Administrator moves an order to its next delivery stage. */
+    /** Administrator moves an order to its next delivery stage; the current state chooses it. */
     public EUK00361749_Order advanceOrderStatus(String orderId) throws IOException {
         requireAdministrator();
         EUK00361749_Order order = findAccessibleOrder(orderId);
-        EUK00361749_Order advanced = order.withStatus(order.status().nextStatus());
+        EUK00361749_Order advanced = order.advance(); // State pattern
         EUK00361749_Store updated = new EUK00361749_Store(store);
         updated.saveOrder(advanced);
         commitChanges(updated);
-        notifyOrderObservers(advanced, order.status());
+        notifyOrderObservers(advanced, order.state());
         return advanced;
     }
 
     /** @return the formatted invoice for an order the logged-in user may see. */
     public String generateInvoice(String orderId) {
         EUK00361749_Order order = findAccessibleOrder(orderId);
-        return pricingPolicy.calculate(order.lines()).toDocument(order);
+        return billCalculator.calculate(order.lines()).toDocument(order);
     }
 
     // =====================================================================
@@ -354,35 +371,26 @@ public final class EUK00361749_Service {
         store = updated;
     }
 
-    /** Turns a basket into order lines, checking quantities, duplicates and stock. */
-    private List<EUK00361749_OrderLine> buildOrderLines(Map<String, Integer> basket) {
-        Map<String, Integer> normalisedBasket = new LinkedHashMap<>();
+    /**
+     * Feeds a basket into a new order builder (Builder pattern). The builder applies the order
+     * rules; product IDs are matched case-insensitively by the store.
+     */
+    private EUK00361749_Order.EUK00361749_OrderBuilder prepareOrder(Map<String, Integer> basket,
+                                                                     LocalDate deliveryDate,
+                                                                     EUK00361749_TimeSlot timeSlot) {
+        EUK00361749_Customer customer = requireCustomer();
+        EUK00361749_Order.EUK00361749_OrderBuilder builder =
+                new EUK00361749_Order.EUK00361749_OrderBuilder(pricingCatalogue, LocalDate.now(clock))
+                        .forCustomer(customer)
+                        .deliverOn(deliveryDate)
+                        .inTimeSlot(timeSlot);
         for (Map.Entry<String, Integer> entry : basket.entrySet()) {
-            if (entry.getValue() == null || entry.getValue() <= 0) {
+            if (entry.getValue() == null) {
                 throw new IllegalArgumentException("Quantity must be at least 1.");
             }
-            String productId = EUK00361749_Validation.validateProductId(entry.getKey());
-            if (normalisedBasket.putIfAbsent(productId, entry.getValue()) != null) {
-                throw new IllegalArgumentException("Product " + productId + " is in the basket twice.");
-            }
+            builder.addProduct(findProductOrFail(entry.getKey()), entry.getValue());
         }
-        if (normalisedBasket.isEmpty()) {
-            throw new IllegalArgumentException("An order must contain at least one product.");
-        }
-        List<EUK00361749_OrderLine> lines = new ArrayList<>();
-        for (Map.Entry<String, Integer> entry : normalisedBasket.entrySet()) {
-            EUK00361749_Product product = findProductOrFail(entry.getKey());
-            if (product.stockStatus() != EUK00361749_StockStatus.IN_STOCK) {
-                throw new IllegalArgumentException(product.productId() + " is " + product.stockStatus()
-                        + "; only In Stock products can be ordered.");
-            }
-            if (entry.getValue() > product.stockQuantity()) {
-                throw new IllegalArgumentException("Only " + product.stockQuantity() + " of " + product.productId()
-                        + " available.");
-            }
-            lines.add(EUK00361749_OrderLine.fromProduct(product, entry.getValue()));
-        }
-        return lines;
+        return builder;
     }
 
     private void requireAdministrator() {

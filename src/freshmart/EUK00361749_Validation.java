@@ -17,6 +17,14 @@ public final class EUK00361749_Validation {
      *
      * @return the trimmed text
      */
+    /**
+     * Shortens text for a fixed-width console column, e.g. "Mangoes (Karuthacolomban) 1kg" becomes
+     * "Mangoes (Karuthacolom...". Stored values are never shortened.
+     */
+    public static String fitWidth(String text, int width) {
+        return text.length() <= width ? text : text.substring(0, width - 3) + "...";
+    }
+
     public static String requireText(String value, String fieldName, int maxLength) {
         if (value == null || value.isBlank() || value.trim().length() > maxLength
                 || value.chars().anyMatch(Character::isISOControl)) {

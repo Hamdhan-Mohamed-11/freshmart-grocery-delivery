@@ -114,7 +114,7 @@ public final class EUK00361749_Store {
         }
         for (EUK00361749_Order order : ordersById.values()) {
             lines.add(encodeRow("O", order.orderId(), order.customerId(), order.customerDetails(),
-                    order.deliveryDate().toString(), order.timeSlot().name(), order.status().name()));
+                    order.deliveryDate().toString(), order.timeSlot().name(), order.state().getCode()));
             for (EUK00361749_OrderLine line : order.lines()) {
                 lines.add(encodeRow("L", order.orderId(), line.productId(), line.name(), line.category().name(),
                         line.unitPrice().toPlainString(), String.valueOf(line.quantity())));
@@ -223,7 +223,7 @@ public final class EUK00361749_Store {
                 throw new IllegalArgumentException("Order refers to an unknown customer.");
             }
             EUK00361749_Order order = new EUK00361749_Order(header[1], header[2], header[3], LocalDate.parse(header[4]),
-                    EUK00361749_TimeSlot.valueOf(header[5]), EUK00361749_OrderStatus.valueOf(header[6]),
+                    EUK00361749_TimeSlot.valueOf(header[5]), EUK00361749_OrderState.fromCode(header[6]),
                     linesByOrder.get(header[1]));
             for (EUK00361749_OrderLine line : order.lines()) {
                 if (findProduct(line.productId()) == null) {

@@ -71,6 +71,7 @@ public record EUK00361749_Product(String productId, String name, EUK00361749_Cat
     @Override
     public String toString() {
         return String.format("%-8s | %-24s | %-20s | LKR %,10.2f | %8d | %s",
-                productId, name, category, unitPrice, stockQuantity, stockStatus);
+                productId, EUK00361749_Validation.fitWidth(name, 24), category, unitPrice, stockQuantity,
+                stockStatus);
     }
 }

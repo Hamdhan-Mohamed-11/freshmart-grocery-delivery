@@ -4,7 +4,8 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * Immutable result of a pricing calculation, plus formatting for the console and text export.
+ * Immutable invoice amounts read from the outermost layer of a decorated bill, plus formatting
+ * for the console and text export.
  *
  * @param lines        product lines that were priced
  * @param productTotal sum of unit price x quantity
@@ -23,6 +24,12 @@ public record EUK00361749_Invoice(List<EUK00361749_OrderLine> lines, BigDecimal 
         lines = List.copyOf(lines);
     }
 
+    /** Reads the five bill steps from a fully decorated bill (see {@link EUK00361749_BillCalculator}). */
+    public static EUK00361749_Invoice fromBill(EUK00361749_Bill bill) {
+        return new EUK00361749_Invoice(bill.getLines(), bill.getProductTotal(), bill.getDiscount(),
+                bill.getDeliveryFee(), bill.getTax(), bill.getAmount());
+    }
+
     /** Product table and totals only (used for the price preview before ordering). */
     @Override
     public String toString() {
@@ -31,7 +38,8 @@ public record EUK00361749_Invoice(List<EUK00361749_OrderLine> lines, BigDecimal 
                 "ID", "Product", "Category", "Unit price", "Qty", "Line total"));
         text.append(SINGLE_LINE).append('\n');
         for (EUK00361749_OrderLine line : lines) {
-            text.append(String.format("%-8s %-24s %-20s %14s %5d %15s%n", line.productId(), line.name(),
+            text.append(String.format("%-8s %-24s %-20s %14s %5d %15s%n", line.productId(),
+                    EUK00361749_Validation.fitWidth(line.name(), 24),
                     line.category(), formatMoney(line.unitPrice()), line.quantity(), formatMoney(line.lineTotal())));
         }
         text.append(SINGLE_LINE).append('\n')
@@ -46,7 +54,7 @@ public record EUK00361749_Invoice(List<EUK00361749_OrderLine> lines, BigDecimal 
 
     /** Full invoice document: heading, customer and delivery details, then the product table. */
     public String toDocument(EUK00361749_Order order) {
-        boolean cancelled = order.status() == EUK00361749_OrderStatus.CANCELLED;
+        boolean cancelled = order.state() instanceof EUK00361749_CancelledState;
         StringBuilder text = new StringBuilder();
         text.append(DOUBLE_LINE).append('\n')
             .append(String.format("%-60s%32s%n",
@@ -55,7 +63,7 @@ public record EUK00361749_Invoice(List<EUK00361749_OrderLine> lines, BigDecimal 
             .append(DOUBLE_LINE).append('\n')
             .append("Customer : ").append(order.customerDetails()).append('\n')
             .append("Delivery : ").append(order.deliveryDate()).append(" | ").append(order.timeSlot()).append('\n')
-            .append("Status   : ").append(order.status()).append('\n')
+            .append("Status   : ").append(order.state()).append('\n')
             .append(SINGLE_LINE).append('\n')
             .append(this);
         if (cancelled) {
